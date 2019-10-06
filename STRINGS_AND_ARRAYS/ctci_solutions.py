@@ -184,7 +184,6 @@ def rotate_matrix_inplace(matrix):
             matrix[-r -1][level] = matrix[-level -1][-r -1]
             matrix[-level -1][-r -1] = matrix[r][-level -1]
             matrix[r][-level -1] = temp
-            # break
     for r in matrix:
         print(r)
 
