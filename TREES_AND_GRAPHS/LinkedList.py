@@ -1,47 +1,29 @@
-class Node:
-    
-    def __init__(self, value, next = None):
-        self.value = value
+class Node(object):
+    def __init__(self, data, next=None):
+        self.data = data
         self.next = next
+    def __repr__(self):
+        return str(self.data)
 
-    def __str__(self):
-        return str(self.value)
-
-class LinkedList:
-
-    def __init__(self, values_list = None):
-        self.head = None
-        self.tail = None
-        for value in values_list:
-            self.add_in_end(value)
-
-    def add_in_end(self, value):
-        if self.head is None:
-            self.tail = self.head = Node(value)
-        else:
-            self.tail.next = Node(value)
-            self.tail = self.tail.next
-
+class LinkedList(object):
+    def __init__(self):
+        self.head = self.tail = None
     def add_in_start(self, value):
         if self.head is None:
-            self.tail = self.head = Node(value)    
+            self.head = self.tail = Node(value)
         else:
             self.head = Node(value, self.head)
-
-    def __iter__(self):
-        current = self.head
-        while current:
-            yield current.value
-            current = current.next
-
-    def __str__(self):
-        return ' -> '.join([str(x) for x in self])
-
-    def __len__(self):
-        result = 0
-        current = self.head
-        while current:
-            result += 1
-            current = current.next
-        return result
-
+    def add_in_end(self, value):
+        if self.head is None:
+            self.head = self.tail = Node(value)
+        else:
+            temp = self.tail
+            self.tail = Node(value)
+            temp.next = self.tail
+    def __repr__(self):
+        result = []
+        node = self.head        
+        while node:
+            result.append(str(node.data))
+            node = node.next
+        return '->'.join(result)
