@@ -1,0 +1,262 @@
+Link for more Content: https://gist.github.com/vasanthk/485d1c25737e8e72759f
+
+Sample_Q. We have millions of Docs. How to search them for a given list of words.
+	Input: [W1, W2, W3]
+	Ouput: [Doc1, Doc2, Doc3]
+Ans:
+	Lets say, we have 10 documents:
+		Parse all docs and create a Hash Table for them like this:
+		"word1": {doc1, doc2, doc3}
+		"word2": {doc3, doc4}
+	Then search for input words in this Hash Table and do an intersection of Doc List. We will get the final Output.
+	
+	Now, for millions of Docs:
+	1. We will store the docs in multiple machines.
+	2. Hash Table may not be able to fit in 1 machine [lot of words or words are repeating etc.] so it also needs to be stored in multiple machines.
+	3. Way to store the Hash Table: 
+		A. Each machine will store a list of words [arrange words alphabetically]. In this case, we need to parse 1 doc in machine a and may have to push the result to machine b to update the Hash Table.
+		B. We can store Hash Tables of a list of docs in 1 machine and then later combine their values.
+		We are going with A.
+	4. Details of A: We will keep storing Words in Machine 1 alphabetically until it is full. Once it is full, we move to next machine. Problem: If a word comes in between that should belong to Machine 1 then we have to make a expensive move for all subsequent machines words.
+	5. Divide the list of words and search in individual machines. Get their outputs and process them in main machine. Take the intersect and get the output.
+	
+Q1: Design a Service that will be called by 1000 clients for doing day-to-day stock price work. Data can be stored in any format.
+Ans1:
+	A. Store whole data as a series of .txt file and provide a FTP method to download these files.
+		Easy to implment.
+			Client will have to download full file. No option to query Range of Stocks, Min price etc.
+			Adding additional data to a .txt file may break client''s parsing mechanism.
+	B. Store whole data in a SQL Database and provide connection details to end users.
+		Easy to implement.
+		Perfect to query data in all sort of ways.
+			Inefficient Queries.
+			May be bit more costly to maintain the DB.			
+	C. Implement it via a XML file.
+		Easy to implement and already got creating and parsing libraries for XML in all languages.
+		Structure will be predefined.
+		To add more data, just add additional nodes and no issues will happen.
+			Parsing the whole file each time.
+	Optimizations:
+		Provide a way to specify Query parameters and output will come accordingly. [Web options]
+		
+Q2: Design a Data Structure for a very large Social Network like Facebook. How will you define an algorithm for shortest path between 2 people.
+Ans2:
+	Data Structure: Graph.
+		Each person is a Node in the Graph.
+		If 2 persons are friends then there will be an edge.
+	Shortest Path Search: S Node to D Node
+		Number of users are less: 
+			Breadth-First-Search [BFS]:  Complexity: Say, each person has k friends.
+				Then, we look k + k*k nodes to complete the BFS. Now, if there are n Nodes between S and D then complexity will be O(k^q)
+			Bi-Directional Breadth-First-Search [Bi-BFS]: Same details.
+				We will roughly look 2k nodes in first iteration which is less than k + k*k nodes. So if n Nodes are there between S and D then 
+				complexity will be O(k^(q/2) + k^(q/2)) i.e. O(k^(q/2))
+				Clearly, B-BFS is faster but we cant implement it if we dont know about the Destination Node.
+			BFS Algorithm Detail:
+				Iterate throguh the List of Neighbors:
+					Add all the nodes in a Queue. Mark this Node a Visited.
+					Process the nodes till the queue is empty.
+			Bi-BFS Algorithm:
+				We cannot mark the visited flag in this case as it can be visited multiple times. So, we can do this by maintaining a Hash Table in each side BFS.	
+		Number of users are huge:
+			Same approach but now our Nodes are stored in multiple machines.
+			For each Node, we get a list of Neighbors. Get the Machine Number where that Node is stored. Go to that machine and process the Node.
+			This can be implemented by a Server, Machine class.
+	Optimizations:
+		Reduce the Machine Jumps: Process all nodes that are on the same machine first.
+		Saving the Nodes as per their attributes: Same Country people on Same machine rather than distributing them randomly.
+		
+Q3: Design a Web Crawler and explain how will we avoid infinite loops.
+Ans:
+	Web is a Graph of Links so infinite loop will occur in case of a cycle of links.
+	Simple Approach: By BFS.
+		Take a URL. 
+		Insert all its links to the end of a Queue. If this link is already visited then ignore the same.
+		Once the URL is done, insert into a Hash Table that means it has been visited.
+	Detailed Approach: Never - Ending Web Crawling:
+		How do we determine that 2 URLs are same or not.
+		1. By Query Parameters. Sometimes, 2 different query parameters are same if they are not handled by the server. Not a perfect way. But, crawling can be finished in this case.
+		2. By Link Content: Sometimes, a link can have dynamic data so each time, we visit the link; data will be different. So, we create a Signature by parsing its content and based on the Signature, we determine whether this has been crawled recently [we store Link and their signature details in a Database]. If yes, assign a lower priority and store this in the database as to be crawled. If it has not been visited then crawl the page and save its details in DB.
+		Now, with this approach; our search will never finish. So, we can put a limit on minimum Priority that will be crawled and we will finish our search Gracefully.
+		
+Q4: Duplicate URLs: How do you detect Duplicate Documents in 10 billion URLs. Duplicate means same URL.
+Ans:
+	Memory needed to save 10 billion URLs: 1 URL: 100 chars: 1 char: 4 bytes so total size is: 4000 billion bytes [4 * 10^12 bytes]
+	Now: 1 GB = 10^9 bytes so total size is: 4000 GB or 4 Terabytes
+	We can not store this much data in memory in normal cases.
+	Solution when everything can be stored in memory:
+		Create a Hash Table where each URL is mapped to True if it has already been found in the list. Or,
+		We can sort the list and look for Duplicate values.	
+	Now, to handle 4 TB data, 2 options:
+	1. Storing it on Disk:
+		Divide the data into 4000 pieces of 1 GB each but how?
+		Each url will be stored in a doc named <x>.txt where x = Hash(url) % 4000. This way all URLs with same Hash code will be in same document so we do not need to look for a URL''s duplicate in another Document. [Of course, this wont work if half of the given URLs are same which will result in same hash code.]
+		Once done, process all 4000 pieces one by one via loading it into memory and implement a Hash Table to detect Duplicates.		
+	2. Storing it on Multiple Machines:
+		Same approach but instead of storing it in <x>.txt; we will store the URLs in Machine x.
+		Advantage: We can process all 4000 chunks in parallel.
+		Disadvantage: Machine Failure and overall complexity.
+	
+
+Q5: Cache: Imagine a Web Server for a Search Engine. It has 100 machines that respond to search queries which calls service processSearch(String query) to another cluster of machines. A machine will be selected at random so no same machine will respond to the same query. processSearch method is very expensive so design a Caching mechanism to cache the results for most recent queries. Also, explain the mechanism to update the cache when data changes.
+Ans:
+	Assumptions:
+		All processing other than calling processSearch will happen in the initial machine.
+		Number of queries are large that need to be cached.
+		Result of a Search query is an ordered list of URLs that has a Title and Summary.
+		Most popular queries are very popular so they would always be there in cache.
+		
+	Data Structure for Cache [Design for a Single Machine]: It needs to have 2 features:
+		Efficient lookup for a Given Key: Hash Tables
+		Updating or moving/replacing old data in order to add/update new Data: Linked Lists.
+		We will create a Data Structure with a combination of both.
+			1st, we will create a LinkedList that will move a Node in Front whenever its accessed. So, Tail of LinkedList is the least used Cache entry.
+			2nd, we will create a Hash Table that will map Linked List Nodes to Query Strings.
+			Above 2 options will give us a Fast Cache Lookup and Fast Cache update [Moving/Updating the data within Cache based on their access].
+	
+	Design for Multiple Machines:
+		Now, we have the design for Cache on a Single Machine. Lets extend it for multiple machines.
+		1. Each machine has its own cache:
+			Plus: 	Simple approach, No machine to machine calls.
+			Minus: 	Many repeat queries will be treated as Fresh queries. [1st Foo will go to Machine 1 and be a part of its Cache. 2nd Foo can go to Machine 2 and can not be processed through Cache.]
+		2. Each Machine has a copy of Cache:
+			Plus: 	Common queries will always be processed through Cache.
+			Minus: 	Updating the Cache will take a lot of time as it needs to travel through all 100 machines.
+					Since, Cache data is being duplicated on 100 machines, we will not be able to have a large cache due to data duplication.
+		3. Each Machine stores a part of Cache:
+			Every Machine will store a segment of Cache. So, we can maintain a larger cache.
+			Trick is that Cache will be segmented based on input Search queries Hash Values.
+			Algorithm to access Cache:
+				Say, Machine i is processing a Query. 
+				It will apply formula HashCode(Query) % 100 to determine which machine will have the Cache Segment for it.
+				It will then call Machine j to return the result of Query.
+				Machine j then look its Cache for given Query. If not found then it will call processSearch(Query) and update its Cache.
+	
+	Updating the Cache when Data changes:
+		When will the search result change that needs to update Cache:
+		1. Content of a URL is changed [Title or Summary] or that URL is no more active.
+		2. Ordering of URLs in a search result changed.
+		3. New URLs are added in the search result.
+		Now, solution will be inefficient if we need instant refreshing. Since, search results do not need to be dead accurate, a wait time is not a problem here.
+		Approach for 1 and 2:
+			Maintain a separate Hash Table to store that a URL is tied to what all Search Queries.
+			So, once a URL is updated, we will put it into the Hash Table. Then, we will periodically crawl/traverse through the Cache to update all the Search Queries Data Structure in respect to the updated URL.
+		Approach for 3:
+			This is bit different as by getting a new URL, we need to figure out what all Search Queries should get updated in the Cache. Best way to achieve this is to implement a "Time Out" on each Cache entry so that no matter, how popular a search query is; it will not be in Cache forever so its results will refresh after a certain time.
+	
+	Enhancements:
+		1. Implement a mechanism to select a Machine based on the Hash Code of Search Query. This will reduce the calls from Machine i to Machine j.
+		2. Optimize the Auto Time Out, how?
+			Some query results (like current news) should be timed out more frequently than others (like historical stock prices). So, we will assign a Time out value to each URL based on how frequently the URL content has been updated in the past.
+			So now, each Search Query will be timed out after the minimum time out value among its associated URLs.
+
+Q6: Sales Rank: An e-Commerce company wants to list the best selling products, overall and by category. Design the system.
+Ans: A typical Database and Distributed System question.
+	Scope of the problem:
+		1. We do not need to design the entire e-Commerce system. We will just touch few components as they affect the Sales data.
+		2. Define how the Sales rank gets calculated. Is it Sales over all time, last month or last week? We will assume for say, last week.
+	Assumptions:
+		1. Stats do not need to be 100% Accurate. Data can be 1 hour old.
+		2. Sub-categories may exists but not relevant for the Ranking.
+		3. We do not need to show all the Products for ranking rather top 1000 or 2000 Products will suffice. This will enable a small Cache.		
+	Major Components:
+		Purchase System	-- Orders added to DB --
+		Database		-- Sort --
+		Sales Rank Data -- Memory Cache --
+		Front End		-- Analytics --
+	Designing the Database Table:
+		Since Purchase data is already stored, we will focus to store the data to do the Rankings.
+		Table 1:
+			Product_ID	Total_Sales	Day1	Day2	Day3	....	Day7
+		Here, on each product Sale, we will update its corresponding row or insert a new row. Columns are representing a Circular array. On the beginning of each day, we will clear that day''s values.
+		So ranking will be based on last 6 complete days plus today.
+			Product_ID can be partitioned on Range for a faster lookup.
+			It can even be created with a SORTED INDEXES Clause for an efficient sorting.
+		Table 2:
+			Product_ID	Cat_ID
+		Sorting:
+			Sort 1: Join both the tables and Sort on Category, Product_ID 
+			This will handle all category based sorting.
+			Sort 2: Overall Sort on Table1 to handle the overall Sales ranking.
+	Challenges:
+		1. Database write can be expensive with more sales per second. We can write sales data periodically. Store the purchase orders in a temp location and write it to our tables hourly.
+		2. Joining the Tables are expensive as they grow larger and larger.
+			We can utilize MapReduce by storing Orders in simple text files and allow for a better scalability. But Database solution should be perfectly running for up to Billions of Products with Thousands of categories.
+			Store each order in a text file. This text File will be saved in subdirectories created for each category like /sports .. /fitness .. etc.
+			Store each product in an overall directory for entire Sales.
+
+Q7: Design a Personal Finanical Manager like Mint.com.
+Ans:
+	Problem Scope:
+		1. User will create an account and add their Bank Accounts to it [everything i.e. Banks, Credit Cards and Loans etc.]
+		2. System will pull the data for Outgoing Money and incoming Money to track Spends and Earnings.
+		3. Each Transaction will be assigned a Category and this will be determined by some system wide rules say by Seller Name.
+		4. Users will get System Recommedations on their Spendings like Spend X% of their income on Clothing [based on all users data]. Based on this, User''s Budget will be created.
+		5. Email Notifications should be sent when user''s Budget limit is crossed.
+		6. Users will be able to change Transaction Categories.
+	Assumptions:
+		1. System is write heavy as each user will make multiple transactions every day.
+		2. Once a transaction is assigned a Category, system will not change it even if Assignment rules are changed.
+		3. Alerts for Budget exceedence need not be sent instantaneously but can wait for 1-2 days as and when System received the Transaction data.
+	Design Components:
+		Bank Data Synchronizer -> 
+			Raw Transaction Data	->	Categorizer -> Categorized Transactions -> Budget Analyzer -> Budget Data
+																|										|
+																|										|
+																_										_
+															-------------------FRONT END ------------------------
+	Implementation Details:
+		1. Asynchronous Processing as System is Data Heavy.
+			Maintain a Queue for system wide tasks such as pulling Bank Data, transaction data, categorization etc.
+			Task can be assigned with a Priority with Retry mechanism.
+			All task needs to be finished eventaully rather than Low Priority Tasks are never getting picked up.
+		2. Categorization Details:
+			Not everything will be stored in Database as it is not relevant for Budget Analysis.
+			Store the Raw Transaction data in flat files and categorize them by Seller Name.
+			We can have a mapping defined in a common file to assign each seller to a Category.
+			Group the Seller''s file and create the user''s file for Seller Name and Category.
+			Ex:
+				amazon/
+					user1:$10:10-AUG
+					user2:$15:15-AUG
+				MacD/
+					user2:$3:12-AUG
+					user3:$10:11-AUG
+			re-grouping and creating user files:
+				user1/	
+					amazon:shopping:$10:10-AUG
+				user2/
+					amazon:shopping:$15:15-AUG
+					MacD:Food:$3:12-AUG
+		3. Once user files are ready, Budget Analyzer job will process them to group the Categories and update the Budget amount for each Category. While updating each Categories amount, it can check for exceedence and accordingly trigger notifications.
+		4. User changing categories:
+			Once user changes it, Budget for that user will get updated instantenously as it won''t take long to process 1 user''s details.		
+
+Q8: Pastebin: Design a Pastebin system where a user can enter a piece of text and get a randomly generated URL for public sharing/access.
+Ans:
+	Problem Scope:
+		1. URLs shoule be random, easy to read but difficult to guess.
+		2. No user accounts or document editing.
+		3. System will maintain stats of each URL but it wont be shown on main page. An option to see will be there.
+		4. Documents that are not accessed for a long time will be deleted.
+		5. System gets heavy traffic and it needs to store millions of documents.
+		6. Traffic is not uniform. Some documents are accessed more frequently than others.
+	System Design Components:
+		[DB1: Stores URL to File Detail Association]  -> File Server 1, File Server 2 ..... File Server n.
+		[DB2: Stores stats of each URL visit as a row in DB to store IP, Timestamp and Location etc.]
+		When the request for accessing a URL comes, we will do a lookup in DB1 to get its filename and location. We will then go to corresponding File Server and fetch the Document to user.
+		When a URL is visited, we will save its stats as a row in DB2 for showing the URL analytics.
+	Key Issues:
+		1. Caching: Documents that are frequently or most recently accessed can be stored in Cache for a faster access. Since, documents cannot be edited; we dont need to worry about updating the cache details.
+		2. Database Sharding: We can store a mapping for URL to Database so that we will know which Database to hit for getting the Document and File Server details. Keeping a single database may slow down the queries.
+		3. Generating URLs:
+			We can generate a unique URL by appending an increasing integer in the end of a fixed prefix but then it will be very easy to guess.
+			We can use a GUID to generate a unique 128 bit string. It will not be very readable.
+			We can use a 10-character sequence to alphanumeric string. Total possible permuatations will be 36^10 so even for a billion documents, chances of collission will be very less.
+			Collission Resolution: Lets say, we are not ready to overwrite a Document due to collission so before generating a URL, we will check its sequence in our database to see if URL already exists or not. If it does, then create a new URL and and done.
+			Now, URL lookup can be made faster by storing them in separate tables by specifying the initial characters. By making 36 tables alone, our lookup will be 36 times faster.
+		4. Analytics:
+			We will use a separate Database or Table to store the URL analytics and details will be updated upon each visit. We will be saving all raw data so that it will be easier to add more analytics details in future.
+			We can utilize some of the inbuilt logging features of the used web server to generate some analytics.
+			
+	
