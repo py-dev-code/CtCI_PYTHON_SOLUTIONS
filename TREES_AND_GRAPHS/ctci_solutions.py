@@ -173,19 +173,30 @@ def is_balanced(root):
 def validate_bst(root):
     '''
     Algorithm:
-        If root is None then return True.
-        If root.left is not None and root.data is less than root.left.data then return False.
-        Similar condition for right node.
-        Call the function recursively for root.lef and root.right and return a result with "and" operator.
+        To validate if a Tree is a BST, we need to check the following condition:
+            Each Node value is more than or equal to all the nodes in its Left Subtree and 
+            Each Node value is less than all the nodes in its Right Subtree.
+    Implementation#1:
+        1. We will implement this method recursively by passing min and max values.
+        2. Initially, min and max will be set to None.
+        3. If a node's value is more than max (it max is not None) or less than or equal to min (if min is not None) then
+        return False.
+        4. While moving left, we will update the max value with node's value and while moving right, we will
+        update the min value with node's value.
+    Another solution for this will be to do a In-order Traversal of the Tree and create a list from it. If that list is
+    sorted then its a BST else not. But this approach will not work when Tree has duplicate nodes becuase list wont know the 
+    exact position of the nodes. In below 2 trees, both the list will look like 20-20 but 2nd Tree is not a BST while 1st Tree is.
+        20          20
+    20                  20
     '''
-    if root is None:
-        return True
-    if root.left and root.data < root.left.data:
-        return False
-    if root.right and root.data >= root.right.data:
-        return False
-    return validate_bst(root.left) and validate_bst(root.right)
+    def validate_bst_util(root, min, max):
+        if root is None:
+            return True
+        if (min is not None and root.data <= min) or (max is not None and root.data > max):
+            return False
+        return validate_bst_util(root.left, min, root.data) and validate_bst_util(root.right, root.data, max)
 
+    return validate_bst_util(root, None, None)
 
 # Problem:4.6 Successor: Write an algorithm to find the "next" node (i.e., in-order successor) of a given node in a
 # binary search tree. You may assume that each node has a link to its parent.
@@ -707,7 +718,7 @@ def paths_with_sum_optimized(root, sum):
     return paths_with_sum_optimized_util(root, sum, 0, path_count)
 
 
-if __name__ == "__main__":
+if __name__ == "__main1__":
     print("Problem# 4.1")
     d = {
         'a': ['c'],
@@ -741,7 +752,7 @@ if __name__ == "__main__":
     print(is_balanced(tree.root))
 
     print("\nProblem# 4.5")
-    tree = create_min_height_bst([1,2,3,4,5])
+    tree = create_min_height_bst([0,1,2,3,1,6,7])
     tree.print()
     print(validate_bst(tree.root))
     tree.root.left.data = 10
