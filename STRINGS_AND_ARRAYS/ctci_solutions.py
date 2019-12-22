@@ -43,25 +43,28 @@ def is_permutation(s1, s2):
 # length of the string. (Note: If implementing in Java, please use a character array so that you can
 # perform this operation in place.)
 # EXAMPLE
-# Input: "Mr John Smith ", 13
+# Input: "Mr John Smith  ", 13
 # Output: "Mr%20John%20Smith"
-def urlify(s, n):
+def urlify(string, true_length):
     '''
-    Algorithm: If s is 'ab c  ' then n will be 4.
-    We will create a list with same length as s.
-    Create an index variable with 0 and loop through s and build the final string.
+    Algorithm: If s is 'a b c    ' then n will be 5.
+    If the True Length of the string is given then this can be done in-place.
+    We will run a reversed loop on the True Length. 
+    Start the write index from end of the string. If loop index is space, write %20 in the end and subtract 
+    write index by 3 else write loop index value in the end and subtract write index by 1.
     '''
-    result = [' ' for x in s]
-    index = 0
-    for r in range(n):
-        if s[r] == ' ':
-            result[index] = '%'
-            result[index + 1] = '2'
-            result[index + 2] = '0'
-            index += 3
+    if string is None: return
+    result = list(string)
+    index = len(result) - 1
+    for r in reversed(range(true_length)):
+        if result[r] == ' ':
+            result[index] = '0'
+            result[index - 1] = '2'
+            result[index - 2] = '%'
+            index -= 3
         else:
-            result[index] = s[r]
-            index += 1
+            result[index] = result[r]
+            index -= 1
     return ''.join(result)
 
 
@@ -81,10 +84,7 @@ def is_palindrome_permutation(s):
     '''
     c = Counter(s)
     l = [x for x in c.keys() if c[x] % 2 != 0]
-    if len(s) % 2 == 0:
-        return len(l) == 0
-    else:
-        return len(l) == 1
+    return len(l) <= 1
 
 
 # Problem:1.5 One Away: There are three types of edits that can be performed on strings: insert a character,
@@ -97,70 +97,65 @@ def is_palindrome_permutation(s):
 # pale, bake -> false
 def is_one_edit_away(s1, s2):
     '''
-    Algorithm: Convert both strings into arrays.
-    The idea is that based on lenght of the arrays, we will make 1 edit in one of the array. After the 1st edit, 
-    if strings of both arrays are same then return true else return false.
-    Edit Decision:
-    If length is same then update element to other array on 1st mismatch.
-    If length is different then delete the element from larger array on 1st mismatch.
+    Algorithm: 
+        Find out the shorter and longer strings, start the index1 and index2 for both the strings.
+        Loop through the strings till index1 or index2 reaches their max limit.
+        A variable diff will be set to False.
+        If index value is same for both the strings, increase index1 and index2 by 1.
+        else:
+            if diff is already True then return False.
+            if length are same then increase both the indexes else increase only index 2 (longer string).
+            set the diff to True.
+        return True after the loop.
     '''
-    if s1 == s2:
-        return True
-    l1 = list(s1)
-    l2 = list(s2)
-    n1, n2 = len(l1), len(l2)
-    
-    if n1 == n2:
-        # Update case
-        for r in range(n1):
-            if l1[r] != l2[r]:
-                l1[r] = l2[r]
-                break
-    elif n1 > n2:
-        # Delete case from l1
-        for r in range(n2):
-            if l1[r] != l2[r]:                
-                l1.remove(l1[r])
-                break
-            elif r == n2 - 1:
-                l1.remove(l1[r + 1])                
-    elif n1 < n2:
-        # Delete case from l2
-        for r in range(n1):
-            if l1[r] != l2[r]:
-                l2.remove(l2[r])
-                break
-            elif r == n1 - 1:
-                l2.remove(l2[r + 1])
-    return ''.join(l1) == ''.join(l2)
+    if s1 is None or s2 is None: return     
+    l1 = len(s1)
+    l2 = len(s2)
+    if abs(l1 - l2) > 1: return False
+    shorter = s1 if l1 <= l2 else s2
+    longer = s2 if l1 <= l2 else s1
+
+    index1 = index2 = 0
+    diff = False
+    while index1 < l1 and index2 < l2:
+        if shorter[index1] == longer[index2]:
+            index1 += 1
+        else:
+            if diff:
+                return False
+            else:
+                diff = True
+                if l1 == l2: index1 += 1        
+        index2 += 1
+    return True
 
 
 # Problem:1.6 String Compression: Implement a method to perform basic string compression using the counts
 # of repeated characters. For example, the string aabcccccaaa would become a2b1c5a3. If the
 # "compressed" string would not become smaller than the original string, your method should return
 # the original string. You can assume the string has only uppercase and lowercase letters (a - z).
-def string_compression(s):
+def string_compression(string):
     '''
     Algorithm:
     No tricks here, a standard traversal of array and variable tracking.
     '''
+    if string is None: return
     result = []
-    result.append(s[0])
-    compress = 1
-    last_char = s[0]
-    for r in range(1, len(s)):
-        if s[r] == last_char:
-            compress += 1
-        elif s[r] != last_char and compress > 1:
-            last_char = s[r]
-            result.append(str(compress))
-            result.append(last_char)
-            compress = 1
-        elif s[r] != last_char and compress == 1:
-            last_char = s[r]
-            result.append(last_char)
-    if compress > 1:
-        result.append(str(compress))
+    index = 0
+    
+    while index < len(string):
+        value = string[index]
+        result.append(value)
+        count = 1
+        for j in range(index + 1, len(string)):
+            if string[j] == value:
+                count += 1
+                index += 1
+            else:
+                break            
+        index += 1
+        if count > 1: result.append(str(count))
+
     return ''.join(result)
 
 
@@ -172,6 +167,10 @@ def rotate_matrix_inplace(matrix):
     To do it in place, we just need to go level by level. If matrix length is 4 or 5 then 2 level needs to be traversed.
     Level 1 is outer rows, level 2 will be inner rows. Level 3 will only have 1 cell so rotation is not applicable.
     Once level is determined, we need to rotate each cell by creating a temp variable.
+    Hints:
+        Loop will run very less number of times. In a 4x4 matrix, loop will run 3 times for level 0.
+	    4 replacement will be done.
+		For each replacement, think what is constant: row or column and then build the logic.
     '''
     n = len(matrix)
     levels = n // 2
@@ -214,7 +213,7 @@ def zero_matrix(matrix):
 
 
 # Problem:1.9 String Rotation:Assume you have a method isSubstring which checks if one word is a substring
-# of another. Given two strings, sl and s2, write code to check if s2 is a rotation of sl using only one
+# of another. Given two strings, sl and s2, write code to check if s2 is a rotation of s1 using only one
 # call to isSubstring (e.g., "waterbottle" is a rotation of"erbottlewat").
 def is_rotation(s1, s2):
     '''
@@ -237,7 +236,7 @@ if __name__ == "__main__":
     print(is_permutation('abac', 'cbaa'))
 
     print("\nProblem# 1.3")
-    print(urlify('a b c    ', 5))
+    print(urlify('Mr John Smith    ', 13))
 
     print("\nProblem# 1.4")
     print(is_palindrome_permutation('assac'))
@@ -249,10 +248,16 @@ if __name__ == "__main__":
     print(string_compression('abbbbbcccccd'))
 
     print("\nProblem 1.7")
+    # m = [
+    # [1,2,3],
+    # [4,5,6],
+    # [7,8,9]
+    # ]
     m = [
-    [1,2,3],
-    [4,5,6],
-    [7,8,9]
+            [1,2,3,4],
+            [5,6,7,8],
+            [9,10,11,12],
+            [13,14,15,16]
     ]
     for r in m:
         print(r)
@@ -271,4 +276,4 @@ if __name__ == "__main__":
         print(r)
 
     print("\nProblem# 1.9")
-    print(is_rotation('abcdef', 'cdefba'))
+    print(is_rotation('abcdef', 'bcdefa'))
