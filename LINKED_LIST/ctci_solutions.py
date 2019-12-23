@@ -41,6 +41,7 @@ def remove_dups_with_buffer(ll):
         Run the loop while current.next is not None. 
         If current.next.data is in the list then move current.next to current.next.next else 
         add current.next.data in the list and move current to current.next.
+        The Trick here is we are not moving the current pointer till we get a unique node.
     '''
     if ll is None or ll.head is None:
         return
@@ -154,9 +155,15 @@ def partition_list(ll, value):
     Algorithm:
         This is bit tricky.
         We will move through the list and if current node data is less than given value then move current node to the head
-        else move it to tail.
-        How to avoid infinite loop: reset the list tail to head before starting the loop.
+        else move it to the tail.
+        How to avoid infinite loop: set the list tail to head before starting the loop and inside the loop set current.next
+        to None (first take it to a variable to iterate the loop ofcourse).
         After the loop, check if tail.next is None or not. If not None then set it to None.
+    
+    Simpler Approach:
+        Create a new LinkedList as result.
+        Traverse through the given LinkedList, if node is smaller than pivot then add it in the head of the result else
+        add it in the tail. We will partition the list in linear time.
     '''
     if ll is None or ll.head is None:
         return
@@ -267,6 +274,15 @@ def list_sum_forward_order(ll1, ll2):
 
 # Probelm:2.6 Palindrome: Implement a function to check if a linked list is a palindrome.
 def is_palindrome(ll):
+    '''
+    Algorithm:
+        Take 2 pointers: slower and faster where faster will move with twice speed.        
+        Approach is based on the fact that when faster reaches the end of the list, slower will be in the middle.
+        So, we will traverse the list till faster is not None and add slower's values in the list.
+        After the loop, slower will be in 2nd half.
+        Now, slower's value should be equal to list's popped value else LinkedList is not a Palindrome.
+        Take care of Even and Odd length of the LinkedList.
+    '''
     if ll is None or ll.head is None:
         return
 

@@ -4,11 +4,9 @@ def get_middle(node):
     if node is None: return node
     slower = node
     faster = node.next
-    while faster:
+    while faster and faster.next:
+        slower = slower.next
         faster = faster.next
-        if (faster):
-            slower = slower.next
-            faster = faster.next
     return slower
 
 def sorted_merge(node1, node2):
