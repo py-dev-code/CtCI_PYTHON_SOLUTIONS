@@ -1,5 +1,6 @@
+from random import randint
 '''
-    This script illustrates the implementation of all the basic sorting algorithms.
+    This script illustrates the implementation of the following sorting algorithms.
     1. merge_sort.
     2. Quick_sort.
     3. Heap_sort.
@@ -62,6 +63,25 @@ def merge_sort(arr):
     merge_sort_util(arr, helper, 0, len(arr) - 1)
     return arr
 
+# One more implementation of quick sort by using a slighty different approach in Partition()
+
+# def partition(array, begin, end):
+#     pivot = begin
+#     for i in range(begin+1, end+1):
+#         if array[i] <= array[begin]:
+#             pivot += 1
+#             array[i], array[pivot] = array[pivot], array[i]
+#     array[pivot], array[begin] = array[begin], array[pivot]
+#     return pivot
+
+# def quicksort(array):
+# 	def quicksort_util(array, low, high):
+# 		if low >= high: return
+# 		pivot = partition(array, low, high)
+# 		quicksort_util(array, low, pivot-1)
+# 		quicksort_util(array, pivot+1, high)
+# 	quicksort_util(array, 0, len(array)-1)    
+
 def quick_sort(arr):
     '''
     Quick Sort is another efficient sorting algorithm which sorts an array in O(NlogN) time.
@@ -89,33 +109,24 @@ def quick_sort(arr):
         So, next it will apply quick_sort on 0 to 2 and 3 to 4. Once these 2 parts are sorted, whole array will be sorted 
         completely.
     '''
-    def swap_elements(arr, i, j):
-        temp = arr[i]
-        arr[i] = arr[j]
-        arr[j] = temp
-
     def partition(arr, low, high):
-        pivot = arr[(low + high) // 2]
-        
-        while low <= high:
-
+        pivot = arr[randint(low, high)]       
+        while low <= high:            
             while arr[low] < pivot:
                 low += 1
             while arr[high] > pivot:
                 high -= 1
             if low <= high:
-                swap_elements(arr, low, high)
+                arr[low], arr[high] = arr[high], arr[low]
                 low += 1
-                high -= 1
-        
+                high -= 1        
         return low
 
     def quick_sort_util(arr, low, high):
+        if low >= high: return
         index = partition(arr, low, high)
-        if low < index - 1:
-            quick_sort_util(arr, low, index - 1)
-        if index < high:
-            quick_sort_util(arr, index, high)
+        quick_sort_util(arr, low, index - 1)
+        quick_sort_util(arr, index, high)
 
     if arr is None or len(arr) == 0:
         return
@@ -232,7 +243,8 @@ if __name__ == "__main__":
     print(merge_sort([6,5,4,1,2,3,0]))
 
     print("\n####### Quick Sort #######")
-    print(quick_sort([6,5,4,1,2,3,0]))
+    # print(quick_sort([6,5,4,1,2,3,0]))
+    print(quick_sort([10,9,8,7,6,5,4,1,2,3,4,5,6,5,3]))
 
     print("\n####### Heap Sort #######")
     print(quick_sort([6,5,4,1,2,3,0]))

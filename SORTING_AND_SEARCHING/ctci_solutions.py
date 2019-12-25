@@ -1,6 +1,5 @@
 import os
 from bitstring import BitArray, BitStream
-from print_tree import print_tree
 
 # Problem: 10.1 Sorted Merge: You are given two sorted arrays, A and B, where A has a large enough buffer at the
 # end to hold B. Write a method to merge B into A in sorted order.
@@ -66,8 +65,7 @@ def search_rotated_array(arr, value):
 				Ex: [50, 5, 20, 30, 40], value to be searched is 5.
 				This is the case when right half is normally sorted. We will put the similar logic as case1.
 		Cases when array can have duplicate values:
-			If array only has unique values then case1 and case2 will be able to handle the complete search. Following 2 cases need to be
-			added in a duplicate array.
+			If array only has unique values then case1 and case2 will be able to handle the complete search. Following 2 cases need to be added in a duplicate array.
 			Case#3: When min element is same as mid element.
 				In this case, we can say that either left half or right half has same values but we dont know that yet.
 				Case#3A: When mid element is not same as max element.
@@ -77,37 +75,20 @@ def search_rotated_array(arr, value):
 					Ex: [2,2,2,3,4,2], value: 3
 					In this case, we dont know where to search so we will search in both the halves of the array.
     '''
-    def search_rotated_array_util(arr, value, min, max):
-        if min > max:
-            return -1
-        mid = (min + max) // 2
+    def search_rotated_array_util(arr, value, low, high):
+        if low > high: return -1
+        mid = (low + high) // 2
         if arr[mid] == value:
-            # Base Case
             return mid
-        
-        if arr[min] < arr[mid]:
-            # Case1: Left half is normally sorted
-            if arr[min] <= value and arr[mid] > value:
-                return search_rotated_array_util(arr, value, min, mid - 1)
-            else:
-                return search_rotated_array_util(arr, value, mid + 1, max)
-        elif arr[min] > arr[mid]:
-            # Case2: Right half is normally sorted
-            if arr[max] >= value and arr[mid] < value:
-                return search_rotated_array_util(arr, value, mid + 1, max)
-            else:
-                return search_rotated_array_util(arr, value, min, mid - 1)
-        elif arr[min] == arr[mid]:
-            # Left half or Right half or both halves are all repeats
-            if arr[mid] != arr[max]:
-                # Case3A: Right half is different so search it
-                return search_rotated_array_util(arr, value, mid + 1, max)
-            else: 
-                # Case3B: we cannot be sure where the repeat values are so we need to search both halves
-                result = search_rotated_array_util(arr, value, min, mid - 1)
-                if result == -1:
-                    result = search_rotated_array_util(arr, value, mid + 1, max)
-                return result
+        elif arr[low] < arr[mid] and value >= arr[low] and value < arr[mid]:
+            return search_rotated_array_util(arr, value, low, mid-1)
+        elif arr[low] == arr[mid] and arr[mid] != arr[high]:
+            return search_rotated_array_util(arr, value, mid+1, high)
+        else:
+            index = search_rotated_array_util(arr, value, low, mid-1)
+            if index == -1:
+                index = search_rotated_array_util(arr, value, mid+1, high)
+            return index
         
     return search_rotated_array_util(arr, value, 0, len(arr) - 1)
 
@@ -262,7 +243,7 @@ def external_heap_sort(input_file, memory_limit):
             If file has already ended then put None into the Heap root and apply Heapify in a way that None will move to the end
             of the Heap.
             Keep doing this till Heap root is None. Output file will be completely sorted.
-        We will implement External Heap Sort Algorithm here.        
+        We will implement External Heap Sort Algorithm here.
     '''
     class HeapNode(object):
         def __init__(self, data, file_pointer):
@@ -484,7 +465,7 @@ def find_duplicates_4KB(array):
             We will loop through the array, if index position at given number is 0 then we set the index to 1.
             If index position is already 1 that means its duplicate entry then we will just print it.
     '''
-    barray = BitStream('0b0') * 32000
+    barray = BitArray('0b0') * 32000
     for r in array:
         if barray[r - 1]:
             print(r)
@@ -494,8 +475,8 @@ def find_duplicates_4KB(array):
 
 # Problem: 10.9 Sorted Matrix Search: Given an M x N matrix in which each row and each column is sorted in
 # ascending order, write a method to find an element.
-def search_sorted_matrix(matrix, r1, c1, r2, c2, value):
-    '''
+def search_sorted_matrix(m, value):
+	'''
     Algorithm:
         Naive Approach:
             1. We can binary search each row and get the index for given value. This will take O(NlogM) time.
@@ -519,59 +500,30 @@ def search_sorted_matrix(matrix, r1, c1, r2, c2, value):
             5. We just need to be careful while calculating the diagnol points in the matrix and determining the 
             dimensions of matrix2 and matrix3. Other than these, rest of the algorithm is straight forward.
     '''
-    def get_element(matrix, i, j):
-        try:
-            return matrix[i][j]
-        except:
-            return None
-
-    if r1 == r2 and c1 == c2 and get_element(matrix, r1, c1) != value:
-        return -1
-    if get_element(matrix, r1, c1) is not None and get_element(matrix, r1, c1) > value:
-        return -1
-    if get_element(matrix, r1, c1) is None:
-        return -1
-    
-    diag_r1 = diag_r2 = r1
-    diag_c1 = diag_c2 = c1
-    
-    while get_element(matrix, diag_r1, diag_c1) is not None:
-        elem = get_element(matrix, diag_r1, diag_c1)
-        if elem == value:
-            return [diag_r1, diag_c1]
-        elif elem < value:
-            diag_r1 = diag_r2
-            diag_c1 = diag_c2
-            diag_r2 += 1
-            diag_c2 += 1
-        elif elem > value:
-            break
-    diag_r1 -= 1
-    diag_c1 -= 1
-    diag_r2 -= 1
-    diag_c2 -= 1
-    
-    # print(diag_r1, diag_c1, diag_r2, diag_c2)
-    
-    left_m_r1 = diag_r2
-    left_m_c1 = c1
-    left_m_r2 = r2
-    left_m_c2 = diag_c1
-
-    right_m_r1 = r1
-    right_m_c1 = diag_c2
-    right_m_r2 = diag_r1
-    right_m_c2 = c2
-
-    # print(left_m_r1, left_m_c1, left_m_r2, left_m_c2)
-    # print(right_m_r1, right_m_c1, right_m_r2, right_m_c2)
-    # return
-
-    result = search_sorted_matrix(matrix, left_m_r1, left_m_c1, left_m_r2, left_m_c2, value)
-    if result == -1:
-        return search_sorted_matrix(matrix, right_m_r1, right_m_c1, right_m_r2, right_m_c2, value)
-    else:
-        return result
+	def matrix_util(m, r1, r2, c1, c2, value):
+		if r1 > r2 or c1 > c2:
+			return -1
+		if r1 == r2 and c1 == c2:
+			if m[r1][c1] == value:
+				return f'[{r1}][{c1}]'
+			else:
+				return -1
+		r = r1
+		c = c1
+		while r <= r2 and c <= c2:
+			if m[r][c] == value:
+				return f'[{r}][{c}]'
+			if m[r][c] > value:
+				break
+			r += 1
+			c += 1
+		# left-bottom sub-matrix
+		result = matrix_util(m, r, r2, c1, c-1, value)
+		if result == -1:
+			# right-upper sub-matrix
+			result = matrix_util(m, r1, r-1, c, c2, value)
+		return result
+	return matrix_util(m, 0, len(m)-1, 0, len(m[0])-1, value)
 
 
 # Problem: 10.10 Rank from Stream: Imagine you are reading in a stream of integers. Periodically, you wish to be able
@@ -586,123 +538,166 @@ def search_sorted_matrix(matrix, r1, c1, r2, c2, value):
 # getRankOfNumber(4) = 3
 '''
     Algorithm:
-        1. To find the rank of an element in a stream, we can sort the elements in a sorted order then do a Binary search for the given element and return the index and it will be the rank of the element. In this method, rank method will take O(logN)
+        1. To find the rank of an element in a stream, we can sort the elements then do a Binary search for the given element and return the index and it will be the rank of the element. In this method, rank method will take O(logN)
         time but inserting a new element will take a lot of time as we will have to shift the elements very often.
         2. Instead of storing elements in a normal array, we can use a Binary Search Tree which will store the element in O(logN)
         time and in order to find the rank of the element, we can store an additional attribute in each node that will save 
         the number of nodes in left subtree of a given node. So, we can do a Binary search for the given element and based on
         the value of left subtree nodes, we will be able to find the rank in O(logN) time.
         Of course, to acheive the performance of O(logN) time, our Binar Search Tree should be Balanced.
-        3. Below implementation is given with a normal BST as adjusting number of left nodes in a Balanced BST is quite tricky.
-        4. Class gives a full implementation of Balanced BST for reference but for implementing Rank and Insert methods, balance method is not 
-        being called.
+        3. Implementing a normal BST with left nodes count is straight forward, we just need to increment the left_nodes count for root whenever an element is getting inserting to the root's left side.
+        4. Maintaining the left_nodes count in a Balanced BST can not be done without maintaining the right_nodes count as well.
+    Below implementation shows the Balanced BST which is the most efficient possible algorithm for the problem.
 '''
 class Node(object):
-    def __init__(self, data, left=None, right=None):
+    def __init__(self, data):
         self.data = data
-        self.left = left
-        self.right = right
+        self.left = None
+        self.right = None
         self.left_nodes = 0
+        self.right_nodes = 0
     def __repr__(self):
         return str(self.data)
 
-class BalBST(object):
-    def __init__(self, root=None):
-        self.root = root
+class AVLTree(object):    
+    def __init__(self):
+        self.root = None
 
-    def height(self, root):
-        if root is None:
-            return 0
-        return max(self.height(root.left), self.height(root.right)) + 1
+    def height(self):
+        def height_util(root):
+            if root is None:
+                return 0
+            else:
+                return max(height_util(root.left), height_util(root.right)) + 1
+        return height_util(self.root)    
 
-    def balance_node(self, root):
-        if root is None:
-            return
-        bf = self.height(root.left) - self.height(root.right)
+    def print_tree(self, node_length=2):
+        def get_parent_level(nodes, level):
+            return nodes[2**(level) - 1: 2**(level+1) - 1]
 
-        if bf == 2 and root.left.right is None:
-            return self.rotate_right(root)
-        elif bf == 2 and root.left.right is not None:
-            root.left = self.rotate_left(root.left)
-            return self.rotate_right(root)
-        elif bf == -2 and root.right.left is None:
-            return self.rotate_left(root)
-        elif bf == -2 and root.right.left is not None:
-            root.right = self.rotate_right(root.right)
-            return self.rotate_left(root)
-        else:
-            return root
+        def process_level(root, nodes, level, line_length):
+            if root is None: return
+            node_space = line_length // 2**(level)
+            if level == 0:
+                nodes.append(root)
+                print(str(nodes[len(nodes) - 1]).center(node_space, ' '), end='')
+            else:
+                for parent in get_parent_level(nodes, level - 1):
+                    if parent == 'X':
+                        
+                        value = 'X'
+                        print_value = ''
+                        nodes.append(value)
+                        print(print_value.center(node_space, ' '), end='') 
 
-    def rotate_left(self, root):
-        node = root.right
-        root.right = node.left
-        node.left = root
-        return node
+                        value = 'X'
+                        print_value = ''
+                        nodes.append(value)
+                        print(print_value.center(node_space, ' '), end='') 
 
-    def rotate_right(self, root):
-        node = root.left
-        root.left = node.right
-        node.right = root
-        return node
-    
-    def insert_key(self, key):
-        self.root = self.insert_key_util(self.root, key)
-    def insert_key_util(self, root, key):
-        if root is None:
-            return Node(key)
-        if root.data >= key:
-            root.left = self.insert_key_util(root.left, key)
-            root.left_nodes += 1
-        elif root.data < key:
-            root.right = self.insert_key_util(root.right, key)
+                    else:
+                        
+                        value = 'X' if parent.left is None else parent.left
+                        print_value = '' if parent.left is None else \
+                        str(parent.left.data)
+                        nodes.append(value)
+                        print(print_value.center(node_space, ' '), end='')
+
+                        value = 'X' if parent.right is None else parent.right
+                        print_value = '' if parent.right is None else str(parent.right.data)
+                        nodes.append(value)
+                        print(print_value.center(node_space, ' '), end='')
+        
+        height = self.height()
+        nodes = []
+        line_length = 2**(height - 1) * 2 * node_length
+        for l in range(height):
+            process_level(self.root, nodes, l, line_length)
+            print()             
+
+    def add_value_bst(self, value):
+        def add_value_bst_util(root, value):
+            if root is None: 
+                return Node(value)
+            if root.data >= value:
+                root.left = add_value_bst_util(root.left, value)
+                root.left_nodes += 1
+            else:
+                root.right = add_value_bst_util(root.right, value)
+                root.right_nodes += 1
+            return self.balance(root)
+        self.root = add_value_bst_util(self.root, value) 
+
+    def balance(self, root):
+        def height(root):
+            if root is None: 
+                return 0
+            return max(height(root.left), height(root.right)) + 1
+
+        def rotate_right(root):
+            if root is None: return
+            node = root.left
+            root.left = node.right
+            if node.right:
+                nodes = node.right.left_nodes + node.right.right_nodes + 1 
+            else:
+                nodes = 0
+            root.left_nodes = nodes
+            node.right = root
+            node.right_nodes = root.left_nodes + root.right_nodes + 1
+            return node
+
+        def rotate_left(root):
+            if root is None: return
+            node = root.right
+            root.right = node.left
+            if node.left:
+                nodes = node.left.left_nodes + node.left.right_nodes + 1
+            else:
+                nodes = 0
+            root.right_nodes = nodes            
+            node.left = root
+            node.left_nodes = root.left_nodes + root.right_nodes + 1
+            return node
+
+        if root is None: return
+        lh = height(root.left)
+        rh = height(root.right)
+
+        if lh - rh > 1:
+            if root.left.left is not None:
+                return rotate_right(root)                
+            else:
+                root.left = rotate_left(root.left)
+                return rotate_right(root)
+        elif rh - lh > 1:
+            if root.right.right is not None:
+                return rotate_left(root)                
+            else:
+                root.right = rotate_right(root.right)
+                return rotate_left(root)
         return root
-        # return self.balance_node(root)
 
     def get_rank(self, value):
-        return self.get_rank_util(self.root, value)
-    def get_rank_util(self, root, value):
-        if root.data == value:
-            return root.left_nodes
-        elif root.data > value:
-            if root.left is None: 
-                return -1
-            else: 
-                return self.get_rank_util(root.left, value)
-        elif root.data < value:
-            if root.right is None:
-                right_rank = -1
-            else:
-                right_rank = self.get_rank_util(root.right, value)
-            if right_rank == -1:
-                return -1
-            else:
-                return root.left_nodes + 1 + right_rank
+        def get_rank_util(root, value):
+            if root.data == value:
+                return root.left_nodes
+            elif root.data > value:
+                if root.left is None: 
+                    return -1
+                else: 
+                    return get_rank_util(root.left, value)
+            elif root.data < value:
+                if root.right is None:
+                    right_rank = -1
+                else:
+                    right_rank = get_rank_util(root.right, value)
+                if right_rank == -1:
+                    return -1
+                else:
+                    return root.left_nodes + 1 + right_rank    
 
-    def remove_key(self, key):
-        self.root = self.remove_key_util(self.root, key)
-    def remove_key_util(self, root, key):
-        if root is None:
-            return None
-        if root.data > key:
-            root.left = self.remove_key_util(root.left, key)
-        elif root.data < key:
-            root.right = self.remove_key_util(root.right, key)
-        else:
-            # case 1,2,3: When left node or right node or both the nodes are None.
-            if root.left is None:
-                return root.right
-            elif root.right is None:
-                return root.left
-            # case 4: when both nodes are not None
-            else:
-                node = root.right
-                while node.left:
-                    node = node.left
-                temp = root.data
-                root.data = node.data
-                node.data = temp
-                root.right = self.remove_key_util(root.right, key)
-        return self.balance_node(root)
+        return get_rank_util(self.root, value)   
 
 
 # Problem: 10.11 Peaks and Valleys: In an array of integers, a "peak" is an element which is greater than or equal to
@@ -712,8 +707,8 @@ class BalBST(object):
 # EXAMPLE
 # Input: {5, 3, 1, 2, 3}
 # Output: {5, 1, 3, 2, 3}
-def sort_valley_and_peak(arr):
-    '''
+def sort_valley_and_peak(m):    
+	'''
     Algorithm:
         1. We will loop through the array starting from index 1 and skipping 1 element each time that is 1,3,5,7 and so on.
         2. We will pick both the adjacent elements for the loop index and adjust those 3 values. If last element is out of 
@@ -725,24 +720,18 @@ def sort_valley_and_peak(arr):
         6. In order to sort the array with valleys and peaks, we can assign max element from sorted list to r, min element to r-1
         and remaining element to r+1.
         7. This is an optimal approach and will take O(N) time.
-    '''
-    
-    if arr is None or len(arr) == 0:
-        return
-    
-    for r in range(1,len(arr),2):
-        if r == len(arr) - 1:
-            temp = sorted([arr[r-1], arr[r]])
-            arr[r] = temp.pop(0)
-            arr[r-1] = temp.pop()
-            
-        else:
-            temp = sorted([arr[r-1], arr[r], arr[r+1]])
-            arr[r] = temp.pop(0)
-            arr[r-1] = temp.pop()            
-            arr[r+1] = temp.pop()
-    
-    return arr
+    '''  	
+	n = len(m) - 1
+	r = 0
+	while r <= n-1:
+		if r + 2 <= n:
+			l = sorted([m[r], m[r+1], m[r+2]])
+			m[r], m[r+1], m[r+2] = l[2], l[0], l[1]
+		else:
+			l = sorted([m[r], m[r+1]])
+			m[r], m[r+1] = l[1], l[0]
+		r += 2
+	return m
 
 
 if __name__ == "__main__":
@@ -796,14 +785,15 @@ if __name__ == "__main__":
         [9, 10, 11, 12, 12.5],
         [13,14, 15, 16, 16.5]
     ]
-    print(search_sorted_matrix(matrix, 0, 0, 3, 4, 5))
+    print(search_sorted_matrix(matrix, 5))
 
     print("\nProblem# 10.10")
-    bst = BalBST()
+    bst = AVLTree()
     for r in [4,3,1,2,7,6,5,8,9]:
-        bst.insert_key(r)
-    print_tree(bst.root, bst.height(bst.root), 2)
+        bst.add_value_bst(r)
+    bst.print_tree()
     print(bst.get_rank(9))
 
     print("\nProblem# 10.11")
-    print(sort_valley_and_peak([5,3,1,2,3]))
+    # print(sort_valley_and_peak([5,3,1,2,3]))
+    print(sort_valley_and_peak([1,3,4,2,4,3,6,7,3,2,1]))
