@@ -1,23 +1,47 @@
 import random
-import print_tree
-from LinkedList import LinkedList
 
-class Graph(object):
-    
+class ListNode(object):
+    def __init__(self, data, next=None):
+        self.data = data
+        self.next = next
+    def __repr__(self):
+        return str(self.data)
+
+class LinkedList(object):
+    def __init__(self):
+        self.head = None
+        self.tail = None
+    def add_in_start(self, value):
+        if self.head is None:
+            self.head = self.tail = ListNode(value)
+        else:
+            self.head = ListNode(value, self.head)
+    def add_in_end(self, value):
+        if self.head is None:
+            self.head = self.tail = ListNode(value)
+        else:
+            self.tail.next = ListNode(value)
+            self.tail = self.tail.next
+    def __repr__(self):
+        result = []
+        node = self.head
+        while node:
+            result.append(str(node.data))
+            node = node.next
+        return ' -> '.join(result)    
+
+class Graph(object):    
     def __init__(self, graph_dict=None):
         self.graph_dict = graph_dict
-
     def add_vertex(self, vertex):
         try:
             key = self.graph_dict[vertex]
         except KeyError:
             self.graph_dict[vertex] = []
-
     def add_edge(self, v1, v2):
         self.add_vertex(v1)
         self.add_vertex(v2)
         self.graph_dict[v1].append(v2)
-
     def __repr__(self):
         result = '{\n'
         for r in self.graph_dict:
@@ -30,25 +54,52 @@ class Node(object):
     def __init__(self, data, left=None, right=None):
         self.data = data
         self.left = left
-        self.right = right
-    
+        self.right = right    
     def __repr__(self):
         return str(self.data)
 
-class BTree(object):
-    
+class BTree(object):    
     def __init__(self, root=None):
         self.root = root
-
     def get_height(self):
         def get_height_util(root):
             if root is None:
                 return 0
             return max(get_height_util(root.left), get_height_util(root.right)) + 1
-        return get_height_util(self.root)
-    
+        return get_height_util(self.root)  
     def print(self):
-        print_tree.print_tree(self.root, self.get_height(), max_node_len=2)      
+        print_tree(self.root)  
+    
+def print_tree(root, max_node_len=2):
+    def get_root_height(root):
+        if root is None: return 0
+        return max(get_root_height(root.left), get_root_height(root.right)) + 1
+    def get_parents(level, nodes):
+        return nodes[2**level - 1: 2**(level+1) - 1]
+    def process_level(root, level, nodes):
+        node_length = line_length // (2**level)
+        if level == 0:
+            nodes.append(root)
+            print_value = str(root.data)
+            print(print_value.center(node_length, ' '), end='')
+        else:
+            for r in get_parents(level - 1, nodes):
+                value = 'X' if r == 'X' or r.left is None else r.left
+                print_value = '' if value == 'X' else str(value.data)
+                nodes.append(value)
+                print(print_value.center(node_length, ' '), end='')
+
+                value = 'X' if r == 'X' or r.right is None else r.right
+                print_value = '' if value == 'X' else str(value.data)
+                nodes.append(value)
+                print(print_value.center(node_length, ' '), end='')        
+    if root is None: return
+    height = get_root_height(root)
+    line_length = 2**(height-1) * 2 * max_node_len
+    nodes = []
+    for level in range(height):
+        process_level(root, level, nodes)
+        print()        
 
 
 # Problem: 4.1 Route Between Nodes: Given a directed graph, design an algorithm to find out whether there is a
@@ -56,7 +107,7 @@ class BTree(object):
 def route_between_nodes(graph, src, dest):
     '''
     Algorithm:
-        This can be done a straight forward BFS or DFS. Below is an iterative BFS implementation with list being used
+        This can be done as a straight forward BFS or DFS. Below is an iterative BFS implementation with list being used
         as a Queue.
     '''
     def route_between_nodes_util(graph, src, dest, visit_status, queue):
@@ -255,7 +306,7 @@ def get_successor():
 
     # Printing the Tree for visualizing the Tree
     print('Tree of the problem is: ')
-    print_tree.print_tree(root, 4, 2)
+    print_tree(root, 2)
 
     node = root.right.right.right
     result = get_successor_util(node)    
@@ -393,7 +444,7 @@ def all_bst_array_sequences(root):
                 [3,4]. We need to combine these 2 arrays now, how? 
                 Weaving of array algorithm will combine these 2 arrays and give the list of all the arrays.
                 So, we can try all the possible scenarios of both arrays as long as sequence of individual array is matched.
-                Means, in all array 2 shoudl always come before 1 and 3 should always come before 4.
+                Means, in all arrays 2 should always come before 1 and 3 should always come before 4.
             Waeving Algorithm Implementation:
                 Input will be 3 lists: left array [2,1], right array [3,4] and prefix [2.5]
                 How it will recurse:
@@ -415,7 +466,7 @@ def all_bst_array_sequences(root):
                         for left in left_list:
                             for right in right_list:
                                 weaving_call(left, right, prefix=[root.data])
-                    Above looping mechanism will call the waving for any particular node.
+                    Above looping mechanism will call the weaving for any particular node.
                     Base case: If node is None then this method will return a list which has a list with 0 elements.
                     Else: prefix will be created by adding root data. Then we will call the same method for left and right subtree
                     to get the left and right list.
@@ -461,7 +512,7 @@ def all_bst_array_sequences(root):
     return results
 
 
-# Problem:4.10 Check Subtree: Tl and T2 are two very large binary trees, with T1 much bigger than T2. Create an
+# Problem:4.10 Check Subtree: T1 and T2 are two very large binary trees, with T1 much bigger than T2. Create an
 # algorithm to determine if T2 is a subtree of T1.
 # A tree T2 is a subtree of T1 if there exists a node n in T1 such that the subtree of n is identical to T2.
 # That is, if you cut off the tree at node n, the two trees would be identical.
@@ -533,16 +584,6 @@ def check_subtree2(root1, root2):
 # insert, find, and delete, has a method getRandomNode() which returns a random node
 # from the tree. All nodes should be equally likely to be chosen. Design and implement an algorithm
 # for getRandomNode, and explain how you would implement the rest of the methods.
-class SizeNode(object):
-    def __init__(self, data, left=None, right=None):
-        self.data = data
-        self.left = left
-        self.right = right
-        self.size = 1
-    def __repr__(self):
-        return str(self.data)
-
-class NewTree(object):
     '''
     Algorithm:
         Insert, Find and Delete methods are similar to standard BST methods.
@@ -556,89 +597,8 @@ class NewTree(object):
         if random number is from 1 to 3 then we will choose a node from left subtree.
         Else, we will choose a node from right subtree. This way, every node will have the same probability for being 
         selected. 
+        **** Refer avl_with_left_right_nodes_count.py Script in Repository "DATA_STRUCTURE_PY/TREES/BALANCED_BST/" ****
     '''
-
-    def __init__(self, root=None):
-        self.root = root
-    
-    def insert_node(self, value):
-        def insert_node_util(root, value):
-            if root is None:
-                return SizeNode(value)
-            elif root.data > value:
-                root.left = insert_node_util(root.left, value)
-            else:
-                root.right = insert_node_util(root.right, value)
-            root.size += 1  
-            return root      
-        if self.root is None:
-            self.root = SizeNode(value)
-        else:
-            self.root = insert_node_util(self.root, value)
-
-    def get_random_node(self, root):
-        def get_random_node_util(root):
-            left_size = 0 if root.left is None else root.left.size
-            num = random.randint(1, root.size)
-            
-            if num == root.size:
-                return root
-            elif num <= left_size:
-                return get_random_node_util(root.left)
-            else:
-                return get_random_node_util(root.right)
-        
-        if root is None:
-            return None
-        return get_random_node_util(root)
-
-    def find_value(self, value):
-        def find_value_util(root, value):
-            if root is None:
-                return None
-            if root.data == value:
-                return root
-            elif root.data > value:
-                return find_value_util(root.left, value)
-            else:
-                return find_value_util(root.right, value)
-
-        if self.root is None:
-            return None
-        return find_value_util(self.root, value)
-
-    def delete_value(self, value):
-        def delete_value_util(root, value):
-            if root is None:
-                return root
-            if root.data > value:
-                root.left = delete_value_util(root.left, value)
-            elif root.data < value:
-                root.right = delete_value_util(root.right, value)
-            else:
-                # Case 1,2,3: root has no child or root only has 1 child
-                if root.left is None:
-                    root = root.right
-                    # return root
-                elif root.right is None:
-                    root = root.left
-                    # return root
-                else:
-                    # case 4: when both left and right child are there.
-                    # In this case, we will find the left most node of the right subtree. Swap its value with the root and
-                    # delete the found node from the tree.
-                    temp = root.data
-                    node = root.right
-                    while node.left:
-                        node = node.left
-                    root.data = node.data
-                    node.data = temp
-                    root.right = delete_value_util(root.right, value)
-            return root
-
-        if self.root is None:
-            return
-        self.root = delete_value_util(self.root, value)
 
 
 # Problem:4.12 Paths with Sum: You are given a binary tree in which each node contains an integer value (which
@@ -718,7 +678,7 @@ def paths_with_sum_optimized(root, sum):
     return paths_with_sum_optimized_util(root, sum, 0, path_count)
 
 
-if __name__ == "__main1__":
+if __name__ == "__main__":
     print("Problem# 4.1")
     d = {
         'a': ['c'],
@@ -789,7 +749,7 @@ if __name__ == "__main1__":
     tree.root.left.left = Node(1)
     tree.root.right.right = Node(4)
 
-    print_tree.print_tree(tree.root, 3, 2)
+    print_tree(tree.root, 2)
     print(all_bst_array_sequences(tree.root))
 
     print("\nProblem# 4.10")
@@ -803,38 +763,9 @@ if __name__ == "__main1__":
     print(check_subtree1(tree1.root, tree2.root))
     print(check_subtree2(tree1.root, tree2.root))
 
-    print("\nProblem# 4.11")
-    tree = NewTree()
-    tree.insert_node(4)
-    tree.insert_node(2)
-    tree.insert_node(5)
-    tree.insert_node(7)
-    tree.insert_node(6)
-    tree.insert_node(8)
-    tree.insert_node(1)
-    tree.insert_node(3)
-
-    tree.delete_value(5)
-    print_tree.print_tree(tree.root, 4, 2)
-
-    d = {'4':0, '2':0, '5':0, '7':0, '6':0, '8':0, '1':0, '3':0}
-    for r in range(1000):
-        rand_node_data = tree.get_random_node(tree.root).data
-        for k in d:
-            if k == str(rand_node_data):
-                d[k] += 1
-    for r in d:
-        print(f'{r}: {d[r]/10}%')
-
-    for r in range(10):
-        print(f'{r}: {tree.find_value(r)}')
-
-    tree.delete_value(5)
-    print_tree.print_tree(tree.root, 4, 2)
-
     print("\nProblem# 4.12")
     tree = create_min_height_bst([-1,-2,-3,0,1,1,3,4,1,2,-5])
-    print_tree.print_tree(tree.root, 4, 2)
+    print_tree(tree.root, 2)
     print(paths_with_sum(tree.root, -1))
     print(paths_with_sum_optimized(tree.root, -1))
 
@@ -848,6 +779,6 @@ if __name__ == "__main1__":
     tree.root.left.left.left = Node(3)
     tree.root.left.left.right = Node(-2)
     tree.root.left.right.right = Node(2)
-    print_tree.print_tree(tree.root, 4, 2)
+    print_tree(tree.root, 2)
     print(paths_with_sum(tree.root, 8))
     print(paths_with_sum_optimized(tree.root, 8))
