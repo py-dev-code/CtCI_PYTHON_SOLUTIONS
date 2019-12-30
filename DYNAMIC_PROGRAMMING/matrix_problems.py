@@ -1,131 +1,156 @@
-def get_total_paths_normal(matrix):
+def get_any_path(m):
     '''
-    Condition: Only right and down movement is allowed. Cell with 0 value are not reachable.
-    '''    
-    def get_total_paths_util_normal(matrix, r, c):
-        if r == row-1 and c == col-1:
-            return 1
-        path_count = 0
-        # Right cell
-        x_right = r
-        y_right = c+1
-        if x_right < row and y_right < col and matrix[x_right][y_right] == 1:
-            path_count += get_total_paths_util_normal(matrix, x_right, y_right)
-        # Down cell
-        x_down = r+1
-        y_down = c
-        if x_down < row and y_down < col and matrix[x_down][y_down] == 1:
-            path_count += get_total_paths_util_normal(matrix, x_down, y_down)
-        return path_count
-
-    row = len(matrix)
-    col = len(matrix[0])
-    if matrix[0][0] == 0 or matrix[row-1][col-1] == 0:
-        return 0
-    return get_total_paths_util_normal(matrix, 0, 0)
-
-
-def get_total_paths_memo(matrix):
+    Problem:
+        1. Only Right and Down movement is allowed.
+        2. Cells with 0 value are not reachable.
+    Algorithm:
+        1. Start with cell [0][0]
+        2. As soon as we reach in the end, return the path.        
     '''
-    Condition: Only right and down movement is allowed. Cell with 0 value are not reachable.
-    '''      
-    def get_total_paths_util_memo(matrix, r, c):
-        if count_matrix[r][c] is not None:
-            # print('Giddy up')
-            return count_matrix[r][c]
-        if r == row-1 and c == col-1:
-            return 1
-        path_count = 0
-        # Right cell
-        x_right = r
-        y_right = c+1
-        if x_right < row and y_right < col and matrix[x_right][y_right] == 1:
-            path_count += get_total_paths_util_memo(matrix, x_right, y_right)
-        # Down cell
-        x_down = r+1
-        y_down = c
-        if x_down < row and y_down < col and matrix[x_down][y_down] == 1:
-            path_count += get_total_paths_util_memo(matrix, x_down, y_down)
-        count_matrix[r][c] = path_count
-        return path_count
-
-    row = len(matrix)
-    col = len(matrix[0])
-    if matrix[0][0] == 0 or matrix[row-1][col-1] == 0:
-        return 0
-    count_matrix = [[None for x in range(col)] for x in range(row)]
-    return get_total_paths_util_memo(matrix, 0, 0)
-
-
-def get_all_paths(matrix):
-    '''
-    Condition: Only right and down movement is allowed. Cell with 0 value are not reachable.
-    '''
-    def get_all_paths_util(matrix, r, c, path, paths):
-        point = (r, c)
-        path.append(point)
-        if r == row-1 and c == col-1:
-            paths.append(list(path))
+    def get_any_path_util(m, r1, c1, r, c, path):
+        if r1 > r or c1 > c or m[r1][c1] == 0:
+            return False        
+        path.append(f'[{r1}][{c1}]')
+        if r1 == r and c1 == c:
+            return True
+        if get_any_path_util(m, r1+1, c1, r, c, path):
+            return True
         else:
-            # Right cell
-            x_right = r
-            y_right = c+1
-            if x_right < row and y_right < col and matrix[x_right][y_right] == 1:
-                get_all_paths_util(matrix, x_right, y_right, path, paths)
-            # Down cell
-            x_down = r+1
-            y_down = c
-            if x_down < row and y_down < col and matrix[x_down][y_down] == 1:
-                get_all_paths_util(matrix, x_down, y_down, path, paths)
+            return get_any_path_util(m, r1, c1+1, r, c, path)        
+
+    if m is None or len(m) == 0:
+        return
+    path = []
+    r = len(m) - 1
+    c = len(m[0]) - 1
+    if get_any_path_util(m, 0, 0, r, c, path):
+        return path
+    else:
+        return "No Path Found!"
+
+def get_all_paths(m):
+    '''
+    Problem:
+        1. Only Right and Down movement is allowed.
+        2. Cells with 0 value are not reachable.
+        3. Need to print all possible paths.
+    Algorithm:
+        1. Start with cell [0][0]
+        2. As soon as we reach in the end, append the path in paths and no return.
+        3. Once both movements are done, pop the cell [r1][c1] from the path so that it can be used in other paths.
+    '''
+    def get_all_paths_util(m, r1, c1, r, c, path, paths):
+        if r1 > r or c1 > c or m[r1][c1] == 0:
+            return
+        path.append(f'[{r1}][{c1}]')
+        if r1 == r and c1 == c:
+            paths.append(list(path))
+        get_all_paths_util(m, r1+1, c1, r, c, path, paths)        
+        get_all_paths_util(m, r1, c1+1, r, c, path, paths)
         path.pop()
 
-    row = len(matrix)
-    col = len(matrix[0])
-    if matrix[0][0] == 0 or matrix[row-1][col-1] == 0:
-        return 0
+    if m is None or len(m) == 0:
+        return
     path = []
     paths = []
-    get_all_paths_util(matrix, 0, 0, path, paths)
-    return paths
+    r = len(m) - 1
+    c = len(m[0]) - 1
+    get_all_paths_util(m, 0, 0, r, c, path, paths)
+    if len(paths) > 0:
+        return paths
+    else:
+        return ["No Path Found!"]
 
-def count_paths(N, prison):
+def get_all_paths_count(m):
     '''
-    Total possible paths when all 4 movements are allowed. Cell with value 0 are not reachable.
-    Below is the pseudo code.
-    Its exactly same as right-down approach except here, we need to maintain a matrix for visited cells to avoid
-    infinite loops.
+    Problem:
+        1. Only Right and Down movement is allowed.
+        2. Cells with 0 value are not reachable.
+        3. Need to get the count of all possible paths.
+    Algorithm:
+        1. Start with cell [0][0]
+        2. As soon as we reach in the end, return 1.
+        3. Use a cache to store the possible paths from any given cell.
     '''
+    def get_all_paths_count_util(m, r1, c1, r, c, cache):
+        if r1 > r or c1 > c or m[r1][c1] == 0:
+            return 0
+        if cache[r1][c1] is not None:
+            return cache[r1][c1]
+        result = 0
+        if r1 == r and c1 == c:
+            return 1
+        result += get_all_paths_count_util(m, r1+1, c1, r, c, cache)
+        result += get_all_paths_count_util(m, r1, c1+1, r, c, cache)
+        cache[r1][c1] = result
+        return result
+    
+    if m is None or len(m) == 0:
+        return 0    
+    r = len(m) - 1
+    c = len(m[0]) - 1
+    cache = [[None for x in range(c+1)] for x in range(r+1)]
+    return get_all_paths_count_util(m, 0, 0, r, c, cache)
 
-    # def count_paths_recurse(X, Y, prison, visited):
-    #     if X == N-1 and Y == N-1:  # reached the exit cell
-    #         return 1
-    #     visited[X][Y] = True
-    #     pathcount = 0
-    #     for direction in (right, left, down, up):
-    #         Xnew, Ynew = neighoring cell coordinates in that direction
-    #         if Xnew and Ynew are inside the prison
-    #                 and prison[Xnew][Ynew] == 0
-    #                 and not visited[Xnew][Ynew]:
-    #             pathcount += count_paths_recurse(Xnew, Ynew, prison, visited)
-    #     visited[X][Y] = False
-    #     return pathcount
+def get_all_paths_count_all_dir(m):
+    '''
+    Problem:
+        1. All movements are allowed.
+        2. Cells with 0 value are not reachable.
+        3. Need to print all possible paths.
+    Algorithm:
+        1. Start with cell [0][0].
+        2. In this, we need to maintain a visited status for each cell so that infinite loop doesnt happen.
+        3. If cell is valid and reachable, mark the visited status as True.
+        4. If cell is the final cell then return 1 and mark its visited status as False.
+        5. Once all 4 movements are done, mark [r1][c1] visited status to False again.
+    '''
+    def all_dir_util(m, r1, c1, r, c, visited):
+        if r1 > r or r1 < 0 or c1 > c or c1 < 0 or m[r1][c1] == 0:
+            return 0
+        if visited[r1][c1]:
+            return 0
+        visited[r1][c1] = True
+        if r1 == r and c1 == c:
+            visited[r1][c1] = False
+            return 1
+        result = 0
+        
+        result += all_dir_util(m, r1-1, c1, r, c, visited)
+        result += all_dir_util(m, r1+1, c1, r, c, visited)
+        result += all_dir_util(m, r1, c1-1, r, c, visited)
+        result += all_dir_util(m, r1, c1+1, r, c, visited)
+        visited[r1][c1] = False
 
-    # if prison is not an NxN matrix containing only 0s and 1s:
-    #     raise an error
-    # create visited as an NxN matrix containing only False
-    # if prison[0][0] != 0 or prison[N-1][N-1] != 0:
-    #     return 0
-    # return count_paths_recurse(0, 0, prison, visited)    
+        return result
+
+    if m is None or len(m) == 0:
+        return 0
+    r = len(m) - 1
+    c = len(m[0]) - 1
+    visited = [[False for x in range(c+1)] for x in range(r+1)]
+    return all_dir_util(m, 0, 0, r, c, visited)
 
 
 if __name__ == "__main__":
-    matrix = [
-        [1, 1, 1],
-        [1, 1, 1],
-        [1, 1, 1]
+    m = [
+        [1, 1, 1, 0],
+        [1, 0, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 0, 1]
     ]
-    print(get_total_paths_memo(matrix))
-    print(get_total_paths_normal(matrix))
-    all_paths = get_all_paths(matrix)
-    for r in all_paths:
+    print("Any Path:")
+    print(get_any_path(m))
+    
+    print()
+    print("All the Paths:")
+    for r in get_all_paths(m):
         print(r)
+    
+    print()
+    print("All the Paths Count:")
+    print(get_all_paths_count(m))
+
+    print()
+    print("All the Paths Count with all 4 Movements allowed:")
+    print(get_all_paths_count_all_dir(m))

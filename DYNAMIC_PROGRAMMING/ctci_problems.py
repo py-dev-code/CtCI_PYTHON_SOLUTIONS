@@ -21,37 +21,28 @@ def count_triple_step_ways(n):
 # The robot can only move in two directions, right and down, but certain cells are "off limits" such that
 # the robot cannot step on them. Design an algorithm to find a path for the robot from the top left to
 # the bottom right.
-def get_grid_path(matrix):
-
-    def get_grid_path_util(matrix, r, c, path):
-        point = (r,c)
-        path.append(point)
-        if r == row - 1 and c == col - 1:
-            return True
-        # Down Cell
-        x_down = r+1
-        y_down = c
-        if x_down < row and y_down < col and matrix[x_down][y_down] == 1:
-            return get_grid_path_util(matrix, x_down, y_down, path)    
-        # Right Cell
-        x_right = r
-        y_right = c+1
-        if x_right < row and y_right < col and matrix[x_right][y_right] == 1:
-            return get_grid_path_util(matrix, x_right, y_right, path)        
-        return False
-
-    if matrix is None or len(matrix) == 0:
-        return []
-    row = len(matrix)
-    col = len(matrix[0])
+def get_grid_path(m):
+    def get_grid_path_util(m, r1, c1, r, c, path):
+        if r1 > r or c1 > c:
+            return
+        if m[r1][c1] == 0:
+            return
+        path.append(f'[{r1}][{c1}]')
+        if r1 == r and c1 == c:
+            return path
+        if get_grid_path_util(m, r1+1, c1, r, c, path) is not None:
+            return path
+        else:
+            return get_grid_path_util(m, r1, c1+1, r, c, path)
+    
+    if len(m) == 0: return
+    r = len(m) - 1
+    c = len(m[0]) - 1
     path = []
-    if get_grid_path_util(matrix, 0, 0, path):
-        return path
-    else:
-        return "No path possible."
+    return get_grid_path_util(m, 0, 0, r, c, path)   
  
 
-# Probelm:8.3 Magic Index: A magic index in an array A[ 1 .•. n-1] is defined to be an index such that A[ i] = i. 
+# Probelm:8.3 Magic Index: A magic index in an array A[ 1 ... n-1] is defined to be an index such that A[i] = i. 
 # Given a sorted array of distinct integers, write a method to find a magic index, if one exists, in
 # array A.
 # FOLLOW UP
@@ -104,7 +95,7 @@ def get_magic_index_in_dupl_array(array):
 
 
 # Problem:8.4 Power Set: Write a method to return all subsets of a set.
-def get_power_set(array):
+def get_power_set(arr):
     '''
     Algorithm:
     For an empty array, result will be an empty set.
@@ -112,18 +103,20 @@ def get_power_set(array):
     For subsequent lenghts, we just need to keep the next element in the list of previous level.
     We will build the result iteratively.
     '''
-    if array is None or len(array) == 0:
-        return set()
-    result = [[] for x in range(len(array))]
-    result[0].append(set())
-    result[0].append({array[0]})
-    for r in range(1, len(array)):
-        result[r].extend(result[r-1])
-        for i in result[r-1]:
-            temp = set(i)
-            temp.add(array[r])
-            result[r].append(temp)
-    return(result[len(result) - 1])
+    def get_power_set_util(arr, result):
+        result.append({arr[0]})
+        for n in range(1, len(arr)):
+            # Deep Copy of a 2D List
+            dupl = [set(x) for x in result]
+            for subset in dupl:
+                subset.add(arr[n])
+                result.append(subset)
+        return result            
+
+    result = [set()]
+    if len(arr) == 0:
+        return result
+    return get_power_set_util(arr, result)    
 
 # Problem:8.5 Recursive Multiply: Write a recursive function to multiply two positive integers without using the
 # * operator. You can use addition, subtraction, and bit shifting, but you should minimize the number
@@ -131,8 +124,6 @@ def get_power_set(array):
 def multiply_without_into(x, y):
     if y == 0:
         return 0
-    if y < 0:
-        return - multiply_without_into(x, -y)
     result = 0
     for _ in range(y):
         result += x
@@ -149,26 +140,21 @@ def recursive_multiply(x, y):
     If even, return half_sum + half_sum else return half_sum + half_sum + bigger.
     No need for memoization as we will not call the recursion for same values again.
     '''
-    def recursive_multiply_util(smaller, bigger):
-        if smaller < 0:
-            return - recursive_multiply_util(-smaller, bigger) 
-        if smaller == 0:
+    def recursive_multiply_util(num1, num2):
+        if num2 == 1:
+            return num1
+        if num2 == 0:
             return 0
-        if smaller == 1:
-            return bigger
-        half = smaller >> 1     # This is equivalent to smaller // 2
-        half_result = recursive_multiply_util(half, bigger)
-        if smaller % 2 == 0:
-            return half_result + half_result
-        else:
-            return half_result + half_result + bigger
-    
-    if x < y:
-        smaller, bigger = x, y
-    else:
-        smaller, bigger = y, x
-    return recursive_multiply_util(smaller, bigger)
-    
+        carry = 0 if num2 % 2 == 0 else num1
+        num2 = num2 >> 1
+        result = (recursive_multiply_util(num1, num2) << 1) + carry
+        return result            
+
+    if x is None or y is None: return
+    num1 = x if x >= y else y
+    num2 = x if x < y else y
+    return recursive_multiply_util(num1, num2)
+
 
 # Problem:8.6 Towers of Hanoi: In the classic problem of the Towers of Hanoi, you have 3 towers and N disks of
 # different sizes which can slide onto any tower. The puzzle starts with disks sorted in ascending order
@@ -178,7 +164,7 @@ def recursive_multiply(x, y):
 # (2) A disk is slid off the top of one tower onto another tower.
 # (3) A disk cannot be placed on top of a smaller disk.
 # Write a program to move the disks from the first tower to the last using stacks.
-def tower_of_hanoi(n, origin, destination, buffer):
+def tower_of_hanoi(source, buffer, dest):
     '''
     Algorithm: Stack can be implemented by list assuming that only append and pop can be used.
     Input n tells that how many disks from origin stack needs to be moved to destination.
@@ -188,33 +174,41 @@ def tower_of_hanoi(n, origin, destination, buffer):
         Move 1 disk from origin to destination.
         Move n-1 disks from buffer to destination (using origin as buffer stack).
     '''
-    if n <= 0:
-        return
-    if n == 1:
-        destination.append(origin.pop())
-        return
-    tower_of_hanoi(n-1, origin, buffer, destination)
-    tower_of_hanoi(1, origin, destination, buffer)
-    tower_of_hanoi(n-1, buffer, destination, origin)
+    def hanoi_util(n, source, buffer, dest):
+        if n == 0:
+            return
+        if n == 1:
+            disk = source[1].pop()
+            dest[1].append(disk)
+            print(f'Move {disk} from {source[0]} to {dest[0]}')
+            return
+        hanoi_util(n-1, source, dest, buffer)
+        hanoi_util(1, source, buffer, dest)
+        hanoi_util(n-1, buffer, source, dest)        
     
+    hanoi_util(len(source[1]), source, buffer, dest)
+
 
 # Problem:8.7 Permutations without Dups: Write a method to compute all permutations of a string of unique
 # characters.
 def string_permutations_no_dupl(string):
     '''
-    Algorithm:
-    Assumption is that String does not have any duplicate characters.
-    Base Case: If string length is 1 then 1st character of string will be returned.
-    Higher Case (length 2): We need to add 0th character of the String to all possible place in result of base case.
-    If string is 'ab' then base result will be ['b'].
-    Now, we will append 'a' on 0th and 1st position of 'b' to make the final result.
-    Refer the next method which is easier to implement and much faster for duplicate strings as well.
+    Algorithm 1:
+        Assumption is that String does not have any duplicate characters.
+        Base Case: If string length is 1 then 1st character of string will be returned.
+        Higher Case (length 2): We need to add 0th character of the String to all possible place in result of base case.
+        If string is 'ab' then base result will be ['b'].
+        Now, we will append 'a' on 0th and 1st position of 'b' to make the final result.
+        Refer the next method which is easier to implement and much faster for duplicate strings as well.
+    Algorithm 2:
+        We will take out 1 letter from string and add it to the permutations of remaining string.
+        Repeat this to the whole string length and permutations will be ready.
     '''
     if string is None or len(string) == 0:
         return
     n = len(string)
     if n == 1:
-        return [string[0]]    
+        return [string[0]]
     base_result = string_permutations_no_dupl(string[1: n])
     result = []
     for r in range(n):
@@ -224,33 +218,57 @@ def string_permutations_no_dupl(string):
     # To clear the base list as it is will not be used now.
     base_result.clear()
     return result
+
+def string_permutations_no_dupl2(string):
+    def string_permutations_no_dupl2_util(string):
+        result = []
+        if len(string) == 1:
+            result.append(string)
+            return result
+        l = len(string)
+        for n in range(l):
+            value = string[n]
+            # removing the nth character
+            string = string[0:n] + string[n+1:l]
+            for r in string_permutations_no_dupl2_util(string):
+                result.append(value+r)
+            # adding the nth character to the string starting. It wont affect the next character 
+            # which will be picked up as string after the nth position will not be changed.
+            string = value + string
+        return result        
+
+    if len(string) == 0:
+        return ''
+    for r in string_permutations_no_dupl2_util(string):
+        print(r)
     
 
 # Problem:8.8 Permutations with Dups: Write a method to compute all permutations of a string whose characters
 # are not necessarily unique. The list of permutations should not have duplicates.
 def string_permutations_by_counter(string):
     '''
-    Algortihm: 1st algorithm will be similar to previous function except we will only add a string in result when it has not 
-    already been added.
-    Below is the very effective algorithm which will run substantially faster when strgin has a lot of duplicates.
+    Algortihm: 
+        1st algorithm will be similar to previous function except we will only add a string in result when it has not 
+        already been added.        
+    Below is the very effective algorithm which will run substantially faster when string has a lot of duplicates.
     Implementation:
-    1. Convert the string into a counter and put the recursive logic on this counter.
-    2. Remove elements from Counter that has 0 or negative counts to avoid infinite loop.
-    3. Base cases: If length of counter is 1 then result will be a list with 1 string with all its count. Ex:
-        Counter({'a':2}) will return ['aa']
-    4. Create a copy of input counter and iterate through its keys.
-    5. For each key, subtract the count by 1 in input counter and call the recursive method.
-    6. Append the key in returned list.
-    7. Once done, increase the count of that key by 1 to keep the same counter for other iterations.
+        1. Convert the string into a counter and put the recursive logic on this counter.
+        2. Remove elements from Counter that has 0 or negative counts to avoid infinite loop.
+        3. Base cases: If length of counter is 1 then result will be a list with 1 string with all its count. Ex:
+            Counter({'a':2}) will return ['aa']
+        4. Create a copy of input counter and iterate through its keys.
+        5. For each key, subtract the count by 1 in input counter and call the recursive method.
+        6. Append the key in returned list.
+        7. Once done, increase the count of that key by 1 to keep the same counter for other iterations.
     '''    
     def get_counter_permutations(c):
         c += Counter()
-        if len(c) == 0: return
         if len(c) == 1:
             for k in c.keys():
                 return [k * c[k]]
 
         result = []
+        # Need to create a copy of c here as keys with 0 counts should not go in the loop.
         c1 = Counter(c)
 
         for k in c1.keys():
@@ -402,13 +420,13 @@ def make_change(cents):
 def place_queens(board_size):
     '''
     Algorithm:
-    This one is quite complicated. First of all, we will not maintain a matrix as each row will only have 1 
-    not None value so result can be represented by a simple list.
-    For validating the position to place a queen, we will validate only column and diagonal as input row
-    will always be empty.
-    Rest is to hanlde the recursion call and we can have our results.
+        This one is quite complicated. First of all, we will not maintain a matrix as each row will only have 1 
+        not None value so result can be represented by a simple list.
+        For validating the position to place a queen, we will validate only column and diagonal as input row
+        will always be empty.
+        Rest is to hanlde the recursion call and we can have our results.
     '''    
-    def place_queens_util(row, col_list, results):   
+    def place_queens_util(row, col_list, results):        
         
         def is_valid(row, col, col_list):
             for r in range(row):
@@ -419,8 +437,8 @@ def place_queens(board_size):
                 row_dist = abs(r - row)
                 if col_dist == row_dist:
                     return False
-            return True            
-            
+            return True
+
         if row == board_size:
             results.append(list(col_list))
         else:
@@ -443,15 +461,15 @@ def place_queens(board_size):
 def stack_of_boxes(tuple_list):
     '''
     Algorithm:
-    We will create a class Box to handle all the dimensions. Function can take a list of Tuples that will be used
-    to create a list of Boxes. We will sort this List (on the basis of any dimension) to make the calculation easier.
-    It will work becuase if Box 1 is higher in any dimension than Box 2 then it can never go on top of Box 2.
-    Algorithm will keep every Box in bottm and try check the height with maximum found height.
-    Util method will be called recursively. Important part is to put a break in for loop of util function as recursion
-    will calculate the complete height for a given Box number at bottom.
-    We are also using a Dictionary to save the height for an individual Box number.    
-    In addition to calculate the maximum height, function will also print the Boxes that will be used to create the 
-    Stack.
+        We will create a class Box to handle all the dimensions. Function can take a list of Tuples that will be used
+        to create a list of Boxes. We will sort this List (on the basis of any dimension) to make the calculation easier.
+        It will work becuase if Box 1 is higher in any dimension than Box 2 then it can never go on top of Box 2.
+        Algorithm will keep every Box in bottm and try check the height with maximum found height.
+        Util method will be called recursively. Important part is to put a break in for loop of util function as recursion
+        will calculate the complete height for a given Box number at bottom.
+        We are also using a Dictionary to save the height for an individual Box number.    
+        In addition to calculate the maximum height, function will also print the Boxes that will be used to create the 
+        Stack.
     '''
     class Box(object):
         def __init__(self, dim_tuple):
@@ -512,18 +530,18 @@ def stack_of_boxes(tuple_list):
 def count_boolean_eval(exp, result, cache_dict={}):
     '''
     Algorithm:
-    Base Case: If length of string is 1 and result is True then 1 possible way, string is 1 and result is False then 0 ways.
-    Higher Case: Split the string on each possible place and count the number of ways for evaluation.
-        Ex: 1&1&1 will have 2 places to try expressions in bracket [position 1 and position 3]
-    We will evaluate the ways for each position and count them to get the total possible ways.
-    How to evaluate the operation ways:
-        We will end up like following: left operator right, result
-    We need to come up with 3 results: total_ways, total_true and total_false (total_ways - total_true)
-        total_ways = (left_true + left_false) * (right_true + right_false)
-        total_true (if operator is &): left_true * right_true
-        total_true (if operator is ^): (left_true * right_false) + (left_right * right_false)
-        similarly for |.
-    In the end, we can implement memoization by saving the result of (exp, result) combination in a dictionary.    
+        Base Case: If length of string is 1 and result is True then 1 possible way, string is 1 and result is False then 0 ways.
+        Higher Case: Split the string on each possible place and count the number of ways for evaluation.
+            Ex: 1&1&1 will have 2 places to try expressions in bracket [position 1 and position 3]
+        We will evaluate the ways for each position and count them to get the total possible ways.
+        How to evaluate the operation ways:
+            We will end up like following: left operator right, result
+        We need to come up with 3 results: total_ways, total_true and total_false (total_ways - total_true)
+            total_ways = (left_true + left_false) * (right_true + right_false)
+            total_true (if operator is &): left_true * right_true
+            total_true (if operator is ^): (left_true * right_false) + (left_right * right_false)
+            similarly for |.
+        In the end, we can implement memoization by saving the result of (exp, result) combination in a dictionary.    
     '''    
     if exp is None or ' ' in exp or len(exp) == 0:
         return 0    
@@ -600,16 +618,16 @@ if __name__ == "__main__":
 
     # 8.5
     print("\nProblem 8.5")
-    print(multiply_without_into(-2,5))
-    print(recursive_multiply(5,-6))
+    print(multiply_without_into(2,5))
+    print(recursive_multiply(5,6))
     
     # 8.6
     print("\nProblem 8.6")
-    origin = [1,2,3,4,5,6]
-    buffer = []
-    destination = []
-    tower_of_hanoi(6, origin, destination, buffer)
-    print(f'{origin} : {buffer} : {destination}')
+    source = ('Source', ['D1', 'D2', 'D3', 'D4'])
+    buffer = ('Buffer', [])
+    dest = ('Dest', [])
+    tower_of_hanoi(source, buffer, dest)
+    print(f'{source} : {buffer} : {dest}')
     
     # 8.7
     print("\nProblem 8.7")
@@ -652,9 +670,9 @@ if __name__ == "__main__":
 
     # 8.14
     print("\nProblem 8.14")
-    print(count_boolean_eval('0&0&0&1^1|0', True))
+    print(count_boolean_eval('0&0&0&1^1|0', False))
     print(count_boolean_eval('1&1&1', True))
-    print(count_boolean_eval('1^0|0|1', False))
+    print(count_boolean_eval('1^0|0|1', True))
 
         
 

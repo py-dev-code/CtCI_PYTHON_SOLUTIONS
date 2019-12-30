@@ -15,7 +15,6 @@ def get_n_factorial(n, l=None):
         l[n] = n * get_n_factorial(n-1, l)
         return l[n]
 
-
 def get_n_factorial_bottom_up(n):
     '''
     Program to calculate n factorial with bottom up approach.
