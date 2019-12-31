@@ -30,7 +30,7 @@ class Stack(object):
         while node:
             result.append(str(node.data))
             node = node.next
-        return ' -> '.join(result)
+        return ' <- '.join(result)
 
 class Queue(object):
     class QueueNode(object):
@@ -141,7 +141,7 @@ class StackWithMin(object):
         while node:
             result.append(str(node.data))
             node = node.next
-        return ' -> '.join(result)
+        return ' <- '.join(result)
 
 
 # Problem: 3.3 Stack of Plates: Imagine a (literal) stack of plates. If the stack gets too high, it might topple.
@@ -219,7 +219,7 @@ class SetOfStacks(object):
             while node:
                 result.append(str(node.data))
                 node = node.next
-            return ' -> '.join(result)
+            return ' <- '.join(result)
     
     def __init__(self, capacity=5):
         self.stacks = []
@@ -276,14 +276,7 @@ class SetOfStacks(object):
         1. 2 Stacks will be there: S1 and S2. S1 will always be used for Push/Enqueue. S2 Stack will only be used for
         Pop/Dequeue.
         2. Enqueue: If S2 is Empty, push to S1. Else Move data from S2 to S1 and push to S1.
-        3. Dequeue/Peek: If S2 is not Empty, pop from it. Else move data from S1 to S2 and Pop/Peek from it.
-    
-    Side Notes: Implementing a Stack with 2 Queues:
-        1. 2 ways to implement: Making Push operation costly or making Pop operation costly. 2nd approach works as below:
-        2. 2 Queues will be there: Q1 and Q2.
-        3. Push: Always push to Q1.
-        4. Pop: Pop everything from Q1 to Q2 while storing the last popped item. Once done, swap the names between Q1 and Q2.
-           Return the last popped item.    
+        3. Dequeue/Peek: If S2 is not Empty, pop from it. Else move data from S1 to S2 and Pop/Peek from it. 
 '''
 class QueueWithTwoStacks(object):
     def __init__(self):
@@ -325,7 +318,65 @@ class QueueWithTwoStacks(object):
     def __repr__(self):
         if not self.first.isEmpty():
             self.move_data(self.first, self.second)
-        return str(self.second)
+        result = []
+        node = self.second.top
+        while node:
+            result.append(str(node.data))
+            node = node.next
+        return ' -> '.join(result)
+
+# Additional Problem: 3.4 Stacks via Queues: Implement a Stack class which implements a Stack using two Queues.    
+'''
+    Algorithm: Implementing a Stack with 2 Queues:
+        1. 2 ways to implement: Making Push operation costly or making Pop operation costly. 2nd approach works as below:
+        2. 2 Queues will be there: Q1 and Q2.
+        3. Push: Always push to Q1.
+        4. Pop: Pop everything from Q1 to Q2 while storing the last popped item. Once done, swap the names between Q1 and Q2.
+            Return the last popped item.
+'''
+class StackWithTwoQueues(object):
+    def __init__(self):
+        self.Q1 = Queue()
+        self.Q2 = Queue()
+
+    def isEmpty(self):
+        return self.Q1.isEmpty() and self.Q2.isEmpty()
+    
+    def push(self, item):
+        self.Q1.add(item)
+
+    def pop(self):
+        if self.isEmpty():
+            raise ValueError("Stack is Empty.")
+        while True:
+            item = self.Q1.remove()
+            if self.Q1.isEmpty():
+                break
+            self.Q2.add(item)
+        # Renaming the Queues
+        self.Q1, self.Q2 = self.Q2, self.Q1
+        return item
+
+    def peek(self):
+        if self.isEmpty():
+            raise ValueError("Stack is Empty.")
+        while not self.Q1.isEmpty():
+            item = self.Q1.remove()
+            self.Q2.add(item)
+        # Renaming the Queues
+        self.Q1, self.Q2 = self.Q2, self.Q1
+        return item
+
+    def __repr__(self):
+        if self.isEmpty():
+            raise("Stack is Empty")
+        result = []
+        node = self.Q1.first
+        while node:
+            result.append(str(node.data))
+            node = node.next
+        return ' <- '.join([x for x in reversed(result)])
+        
 
 
 # Problem: 3.5 Sort Stack: Write a program to sort a stack such that the smallest items are on the top. You can use
@@ -389,7 +440,7 @@ class StackWithSort(object):
         while node:
             result.append(str(node.data))
             node = node.next
-        return ' -> '.join(result)    
+        return ' <- '.join(result)    
     
 
 # Problem: 3.6 Animal Shelter: An animal shelter, which holds only dogs and cats, operates on a strictly "first in, first
@@ -448,14 +499,12 @@ class AnimalShelter(object):
 
 
 if __name__ == "__main__":
-    print("Problem: 3.2")
+    print("Problem: 3.2 Stack With Minimum Item:")
     s = StackWithMin()
     s.push(3)
     s.push(4)
     s.push(2)
     s.push(1)
-    print(s, ':', s.least())
-    s.pop()
     print(s, ':', s.least())
     s.pop()
     print(s, ':', s.least())
@@ -498,6 +547,24 @@ if __name__ == "__main__":
     print(q.peek())
     print(q)
 
+    print("\nAditional Problem: 3.4 Stack with 2 Queues:")
+    s = StackWithTwoQueues()
+    print("Adding Items:")
+    for r in range(5):
+        s.push(r)
+    print(s)
+    print("Removing Items:")
+    print(s.pop())
+    print(s.pop())
+    print(s)
+    print("Adding Items after Remove operation:")
+    s.push(1)
+    s.push(2)
+    print(s)
+    print("Peeking Operation:")
+    print(s.peek())
+    print(s)
+
     print("\nProblem: 3.5 Stack Sorting with an Additional Stack:")
     s = StackWithSort()
     for r in [7,6,3,4,5,7,1,1,2,2,34]:
@@ -516,7 +583,6 @@ if __name__ == "__main__":
     a.enqueue('Dog', 'Dog2')
     print(a.dogs, '::', a.cats)
     print(a.dequeue('Dog'))
-    print(a.dequeueAny())
     print(a.dequeueAny())
     print(a.dequeueAny())
     print(a.dequeueAny())
