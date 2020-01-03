@@ -35,7 +35,7 @@ class Graph(object):
         self.graph_dict = graph_dict
     def add_vertex(self, vertex):
         try:
-            key = self.graph_dict[vertex]
+            _ = self.graph_dict[vertex]
         except KeyError:
             self.graph_dict[vertex] = []
     def add_edge(self, v1, v2):
@@ -113,13 +113,14 @@ def route_between_nodes(graph, src, dest):
     def route_between_nodes_util(graph, src, dest, visit_status, queue):
         visit_status[src] = True
         queue.append(src)
-        if src == dest:
-            return True
         while len(queue) > 0:
             node = queue.pop(0)
-            for neighbor in graph.graph_dict[node]:
-                if not visit_status[neighbor]:
-                    return route_between_nodes_util(graph, neighbor, dest, visit_status, queue)
+            if node == dest:
+                return True
+            for nbhr in graph.graph_dict[node]:
+                if not visit_status[nbhr]:
+                    queue.append(nbhr)
+                    visit_status[nbhr] = True
         return False
 
     visit_status = {}
@@ -162,34 +163,22 @@ def list_of_depths(root):
         Then call a function for each height level which will append all the nodes in the list for the given level.
         Function will append the node in the list if level is 1 else it will recurse to left and right node with level - 1.
     '''
-
-    def get_height_util(root):
-        if root is None:
-            return 0
-        return max(get_height_util(root.left), get_height_util(root.right)) + 1
-
-    def process_level(root, level, l):
-        if root is None:
-            return
+    def get_height(root):
+        if root is None: return 0
+        return max(get_height(root.left), get_height(root.right)) + 1
+    
+    def process_level(root, level, ll):
+        if root is None: return
         if level == 1:
-            l.append(root.data)
+            ll.add_in_end(root.data)
         else:
-            process_level(root.left, level - 1, l)
-            process_level(root.right, level - 1, l)
+            process_level(root.left, level - 1, ll)
+            process_level(root.right, level - 1, ll)
 
-    if root is None: 
-        return
-
-    height = get_height_util(root)
-    result = []
-    for r in range(1, height+1):
-        l = []
-        process_level(tree.root, r, l)
-        result.append(l)
-    for r in result:
+    if root is None: return []
+    for level in range(1, get_height(root) + 1):
         ll = LinkedList()
-        for i in r:
-            ll.add_in_end(i)
+        process_level(root, level, ll)
         print(ll)
 
 
@@ -248,6 +237,7 @@ def validate_bst(root):
         return validate_bst_util(root.left, min, root.data) and validate_bst_util(root.right, root.data, max)
 
     return validate_bst_util(root, None, None)
+
 
 # Problem:4.6 Successor: Write an algorithm to find the "next" node (i.e., in-order successor) of a given node in a
 # binary search tree. You may assume that each node has a link to its parent.
@@ -339,39 +329,28 @@ def graph_topological_sort(graph):
             After the loop, check if we have deleted any keys or not. If no key is deleted then return False.
             We cannot delete key from dictionary while looping through it so we can use a variable to do all deletes after the 
             loop.
-    '''
-    
+    '''    
     def topological_sort_util(d_util, result):
         if len(d_util) == 0:
-            return True
-
-        del_key_list = []
-
+            return True               
         for key in d_util:
-            delete_key = True
+            del_key = None
+            delete = True
             for nodes in d_util.values():
                 if key in nodes:
-                    delete_key = False
+                    delete = False
                     break
-            if delete_key:
-                del_key_list.append(key)
-        
-        if len(del_key_list) == 0:
-            return False
-        
-        while len(del_key_list) > 0:
-            key = del_key_list.pop()
-            del d_util[key]
-            result.append(key)    
-
+            if delete: 
+                del_key = key
+                break
+        if del_key is None: return False
+        del d_util[del_key]
+        result.append(del_key)
         return topological_sort_util(d_util, result)
 
-    if graph is None or graph.graph_dict is None:
-        return
-    
+    if graph is None or graph.graph_dict is None: return    
     d_util = dict(graph.graph_dict)
     result = []
-
     if topological_sort_util(d_util, result):
         return result
     else:
@@ -395,12 +374,12 @@ def common_ancestor(root, node1, node2):
     def covers(root, node):
         if root is None:
             return False
-        if root == node:
+        if root.data == node:
             return True
         return covers(root.left, node) or covers(root.right, node)
 
     def common_ancestor_util(root, node1, node2):
-        if root is None or root == node1 or root == node2:
+        if root is None or root.data == node1 or root.data == node2:
             return root
         is_left1 = covers(root.left, node1)
         is_left2 = covers(root.left, node2)
@@ -409,8 +388,7 @@ def common_ancestor(root, node1, node2):
         subtree_root = root.left if is_left1 else root.right
         return common_ancestor_util(subtree_root, node1, node2)
 
-    if not covers(root, node1) or not covers(root, node2):
-        return None
+    if not covers(root, node1) or not covers(root, node2): return None
     return common_ancestor_util(root, node1, node2)
 
 
@@ -624,12 +602,12 @@ def paths_with_sum(root, sum, result=None):
     if result is None:
         result = [0]
     paths_with_sum_util(root, sum, result)
-    if root.left:    
+    if root:    
         paths_with_sum(root.left, sum, result)  
-    if root.right:
         paths_with_sum(root.right, sum, result)  
 
     return result[0]
+  
 
 def paths_with_sum_optimized(root, sum):
     '''
@@ -678,7 +656,7 @@ def paths_with_sum_optimized(root, sum):
     return paths_with_sum_optimized_util(root, sum, 0, path_count)
 
 
-if __name__ == "__main__":
+if __name__ == "__main1__":
     print("Problem# 4.1")
     d = {
         'a': ['c'],
@@ -697,6 +675,7 @@ if __name__ == "__main__":
 
     print("\nProblem# 4.3")
     tree = create_min_height_bst([1,2,3,4,5,6,7])
+    print_tree(tree.root)
     list_of_depths(tree.root)
 
     print("\nProblem# 4.4")
@@ -739,7 +718,7 @@ if __name__ == "__main__":
     print("\nProblem# 4.8")
     tree = create_min_height_bst([1,2,3,4,5,6,7,8,9])
     tree.print()
-    print(common_ancestor(tree.root, tree.root.right, tree.root.right.left))
+    print(common_ancestor(tree.root, 4, 2))
 
     print("\nProblem# 4.9")
     tree = BTree()

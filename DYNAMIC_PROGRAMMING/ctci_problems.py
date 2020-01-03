@@ -9,7 +9,7 @@ def count_triple_step_ways(n):
         return 0
     l = [None for x in range(max(3, n+1))]
     # Ways to take 0 steps can be taken either 0 or 1 which will give different outputs.
-    l[0] = 0    
+    l[0] = 1  
     l[1] = 1
     l[2] = 2
     for r in range(3, n+1):
@@ -594,7 +594,7 @@ def count_boolean_eval(exp, result, cache_dict={}):
     return ways
     
 
-if __name__ == "__main__":
+if __name__ == "__main1__":
     # 8.1
     print("Problem 8.1")
     print(count_triple_step_ways(15))       # 4841
