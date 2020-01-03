@@ -230,16 +230,29 @@ def list_sum_reverse_order(ll1, ll2):
 def list_sum_forward_order(ll1, ll2):
     '''
     Algorithm:
-        If numbers are stored in forward order then we will pad the smaller list with 0's first.
-        Then we will loop through the lists and calculate the total sum.
-        In the end, we will convert the sum to a string and add each number to a new Linked List.
+        1. If numbers are stored in forward order then we will pad the smaller list with 0's first.
+        2. Once done, we need to use recursion to add the numbers from 1's digit and set the final node 
+        accordingly.
+        3. Algorithm is quite tricky and we are using global variables to implement it.        
     '''
+    def add_forward_util(node1, node2):
+        if node1 is None or node2 is None: return
+        global carry
+        global node
+        add_forward_util(node1.next, node2.next)
+        result = node1.data + node2.data + carry
+        temp = Node(result % 10)
+        carry = result // 10
+        if node is None:
+            node = temp
+        else:
+            temp.next = node
+            node = temp
+
     if ll1 is None or ll2 is None or ll1.head is None or ll2.head is None:
         return
-
     node1 = ll1.head
     node2 = ll2.head
-
     n1 = 0
     n2 = 0
     while node1:
@@ -247,8 +260,7 @@ def list_sum_forward_order(ll1, ll2):
         node1 = node1.next
     while node2:
         n2 += 1
-        node2 = node2.next
-    
+        node2 = node2.next    
     if n1 > n2:
         for r in range(n1 - n2):
             ll2.add_in_start(0)
@@ -256,20 +268,31 @@ def list_sum_forward_order(ll1, ll2):
         for r in range(n2 - n1):
             ll1.add_in_start(0)
 
-    result = 0
-    node1 = ll1.head
-    node2 = ll2.head
+    global carry
+    global node
+    node = None
+    carry = 0
+    add_forward_util(ll1.head, ll2.head)
+    if carry > 0:
+        new_node = Node(carry)
+        new_node.next = node
+    else:
+        new_node = node
 
-    while node1 and node2:
-        result = (result * 10) + node1.data + node2.data
-        node1 = node1.next
-        node2 = node2.next
+    result = []
+    while new_node:
+        result.append(str(new_node.data))
+        new_node = new_node.next
+    print(' -> '.join(result))
 
-    ll = LinkedList()    
-    for r in [int(x) for x in str(result)]:
-        ll.add_in_end(r)
 
-    return ll
+ll1 = LinkedList()
+ll2 = LinkedList()
+for r in [8,0,0]:
+    ll1.add_in_end(r)
+for r in [1,0,0]:
+    ll2.add_in_end(r)
+list_sum_forward_order(ll1, ll2)
     
 
 # Probelm:2.6 Palindrome: Implement a function to check if a linked list is a palindrome.
@@ -396,7 +419,7 @@ def detect_cycle(ll):
             runner = runner.next
 
 
-if  __name__ == "__main__":
+if  __name__ == "__main1__":
     print("Problem# 2.1")
     ll1 = LinkedList()
     ll2 = LinkedList()
