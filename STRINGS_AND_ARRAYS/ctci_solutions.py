@@ -117,7 +117,7 @@ def is_one_edit_away(s1, s2):
 
     index1 = index2 = 0
     diff = False
-    while index1 < l1 and index2 < l2:
+    while index1 < len(shorter) and index2 < len(longer):
         if shorter[index1] == longer[index2]:
             index1 += 1
         else:
